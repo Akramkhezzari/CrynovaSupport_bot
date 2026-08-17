@@ -1,1 +1,0 @@
-# crynova-support-bot
