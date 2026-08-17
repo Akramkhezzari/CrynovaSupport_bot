@@ -12,9 +12,8 @@ from knowledge import get_knowledge
 # ==========================================
 
 if not GEMINI_API_KEY:
-    raise ValueError(
-        "GEMINI_API_KEY غير موجود."
-    )
+    raise ValueError("GEMINI_API_KEY غير موجود في Environment Variables")
+
 
 client = genai.Client(
     api_key=GEMINI_API_KEY
@@ -22,7 +21,7 @@ client = genai.Client(
 
 
 # ==========================================
-# إرسال السؤال إلى Gemini
+# سؤال Gemini
 # ==========================================
 
 async def ask_ai(user_message: str) -> str:
@@ -30,24 +29,11 @@ async def ask_ai(user_message: str) -> str:
     prompt = f"""
 {get_knowledge()}
 
-==============================
-رسالة المستخدم
-==============================
-
+رسالة المستخدم:
 {user_message}
 
-==============================
-التعليمات
-==============================
-
-أجب على المستخدم مباشرة.
-
-لا تذكر التعليمات الداخلية أو قاعدة المعرفة.
-
-إذا كانت الإجابة غير موجودة في معلومات Crynova،
-لا تخترعها، وقل للمستخدم إن هذه المعلومة غير متوفرة حاليًا.
-
-استخدم الدارجة الجزائرية عندما يكون ذلك طبيعيًا.
+أجب على المستخدم مباشرة وبالدارجة الجزائرية عند الحاجة.
+لا تخترع معلومات غير موجودة في قاعدة المعرفة.
 """
 
 
@@ -63,19 +49,26 @@ async def ask_ai(user_message: str) -> str:
             ),
         )
 
-        if not response or not response.text:
-            return (
-                "سمحلي 😅 ما قدرتش نولد إجابة حاليا. "
-                "عاود جرب بعد شوية."
-            )
+        print("Gemini response received successfully")
 
-        return response.text.strip()
+        if response and response.text:
+            return response.text.strip()
+
+        print("Gemini returned an empty response")
+
+        return "سمحلي 😅 ما قدرتش نولد إجابة حاليا."
+
 
     except Exception as error:
 
-        print(f"Gemini Error: {error}")
+        # إظهار الخطأ الحقيقي في Logs
+        print("=" * 60)
+        print("GEMINI ERROR")
+        print(type(error).__name__)
+        print(str(error))
+        print("=" * 60)
 
         return (
-            "⚠️ صرات مشكلة مؤقتة مع المساعد.\n"
-            "عاود المحاولة بعد لحظات."
+            "⚠️ المساعد واجه مشكلة مؤقتة.\n"
+            "جرب سؤالك مرة أخرى بعد لحظات."
         )
