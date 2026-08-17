@@ -80,13 +80,7 @@ ALLOWED_DOMAINS = {
     "telegram.me",
 }
 
-# إذا كان رابط منصتك مختلف، أضفه هنا.
-# مثال:
-# ALLOWED_DOMAINS.add("example.com")
-
-
 # كلمات سب وإهانة بسيطة.
-# أضف الكلمات الخاصة بمنصتك لاحقًا حسب الحاجة.
 INSULT_WORDS = {
     "كلب",
     "حمار",
@@ -102,9 +96,7 @@ INSULT_WORDS = {
     "نصابين",
 }
 
-
 # كلمات تدل على شكوى أو اتهام.
-# لا نحذفها تلقائيًا لأنها ممكن تكون شكوى حقيقية.
 COMPLAINT_WORDS = {
     "نصب",
     "نصاب",
@@ -121,7 +113,6 @@ COMPLAINT_WORDS = {
     "فلوسي",
 }
 
-
 # مخالفات المستخدم في الذاكرة
 warnings = defaultdict(int)
 
@@ -131,46 +122,26 @@ warnings = defaultdict(int)
 # =========================================================
 
 class HealthHandler(BaseHTTPRequestHandler):
-
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
-
-        self.wfile.write(
-            b"Crynova AI Bot is running!"
-        )
+        self.wfile.write(b"Crynova AI Bot is running!")
 
     def log_message(self, format, *args):
         return
 
 
 def start_web_server():
-
     port = int(os.getenv("PORT", "10000"))
-
     while True:
         try:
-            server = HTTPServer(
-                ("0.0.0.0", port),
-                HealthHandler
-            )
-
-            logger.info(
-                "Health server started on port %s",
-                port
-            )
-
+            server = HTTPServer(("0.0.0.0", port), HealthHandler)
+            logger.info("Health server started on port %s", port)
             server.serve_forever()
-
         except Exception as error:
-
-            logger.exception(
-                "Health server error: %s",
-                error
-            )
-
+            logger.exception("Health server error: %s", error)
             time.sleep(5)
 
 
@@ -187,51 +158,30 @@ URL_PATTERN = re.compile(
     r")"
 )
 
-
 def extract_urls(text: str):
-
     if not text:
         return []
-
     return URL_PATTERN.findall(text)
 
-
 def clean_url(url: str):
-
-    return url.rstrip(
-        ".,!?;:)]}>\"'"
-    )
-
+    return url.rstrip(".,!?;:)]}>\"'")
 
 def get_domain(url: str):
-
     url = clean_url(url).lower()
-
     if url.startswith("https://"):
         url = url[8:]
-
     elif url.startswith("http://"):
         url = url[7:]
-
     elif url.startswith("www."):
         url = url[4:]
-
     return url.split("/")[0].split(":")[0]
 
-
 def contains_external_link(text: str):
-
     urls = extract_urls(text)
-
     for raw_url in urls:
-
-        url = clean_url(raw_url)
-
-        domain = get_domain(url)
-
+        domain = get_domain(raw_url)
         if domain not in ALLOWED_DOMAINS:
             return True
-
     return False
 
 
@@ -240,37 +190,21 @@ def contains_external_link(text: str):
 # =========================================================
 
 def contains_insult(text: str):
-
     if not text:
         return False
-
-    normalized = (
-        text.lower()
-        .replace("أ", "ا")
-        .replace("إ", "ا")
-        .replace("آ", "ا")
-    )
-
+    normalized = text.lower().replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
     for word in INSULT_WORDS:
-
         if word in normalized:
             return True
-
     return False
 
-
 def contains_complaint(text: str):
-
     if not text:
         return False
-
     normalized = text.lower()
-
     for word in COMPLAINT_WORDS:
-
         if word in normalized:
             return True
-
     return False
 
 
@@ -278,36 +212,17 @@ def contains_complaint(text: str):
 # التحقق من المشرف
 # =========================================================
 
-async def is_admin(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-
-    if not update.effective_chat:
+async def is_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_chat or not update.effective_user:
         return False
-
-    if not update.effective_user:
-        return False
-
     try:
-
         member = await context.bot.get_chat_member(
             update.effective_chat.id,
             update.effective_user.id
         )
-
-        return member.status in (
-            "administrator",
-            "creator",
-        )
-
+        return member.status in ("administrator", "creator")
     except TelegramError as error:
-
-        logger.warning(
-            "Admin check failed: %s",
-            error
-        )
-
+        logger.warning("Admin check failed: %s", error)
         return False
 
 
@@ -315,46 +230,19 @@ async def is_admin(
 # حذف الرسالة
 # =========================================================
 
-async def delete_message(
-    update: Update,
-    reason: str
-):
-
+async def delete_message(update: Update, reason: str):
     try:
-
         await update.message.delete()
-
-        logger.info(
-            "Message deleted. Reason: %s",
-            reason
-        )
-
+        logger.info("Message deleted. Reason: %s", reason)
         return True
-
     except Forbidden:
-
-        logger.warning(
-            "Bot does not have permission to delete messages."
-        )
-
+        logger.warning("Bot does not have permission to delete messages.")
         return False
-
     except BadRequest as error:
-
-        logger.warning(
-            "Could not delete message: %s",
-            error
-        )
-
+        logger.warning("Could not delete message: %s", error)
         return False
-
     except TelegramError as error:
-
-        logger.warning(
-            "Telegram delete error: %s",
-            error
-        )
-
+        logger.warning("Telegram delete error: %s", error)
         return False
 
 
@@ -362,144 +250,68 @@ async def delete_message(
 # تحذير المستخدم
 # =========================================================
 
-async def warn_user(
-    update: Update,
-    reason: str
-):
-
+async def warn_user(update: Update, reason: str):
     if not update.effective_user:
         return
-
     user_id = update.effective_user.id
-
     warnings[user_id] += 1
-
     count = warnings[user_id]
 
     if count == 1:
-
         message = (
             "⚠️ خويا، نبهتك برك.\n\n"
             f"السبب: {reason}\n\n"
-            "خلي النقاش محترم، وإذا عندك مشكل مع "
-            "المنصة اشرح المشكل ونعاونك."
+            "خلي النقاش محترم، وإذا عندك مشكل مع المنصة اشرح المشكل ونعاونك."
         )
-
     elif count == 2:
-
         message = (
             "⚠️ هذا ثاني تنبيه ليك.\n"
-            "إذا عندك شكوى أو مشكل في Crynova "
-            "اكتب التفاصيل بدون سب أو إهانة."
+            "إذا عندك شكوى أو مشكل في Crynova اكتب التفاصيل بدون سب أو إهانة."
         )
-
     else:
-
-        message = (
-            "🚫 راك تجاوزت عدد التنبيهات المسموح به.\n"
-            "خلي النقاش محترم."
-        )
+        message = "🚫 راك تجاوزت عدد التنبيهات المسموح به.\nخلي النقاش محترم."
 
     try:
-
-        await update.effective_chat.send_message(
-            message
-        )
-
+        await update.effective_chat.send_message(message)
     except TelegramError as error:
-
-        logger.warning(
-            "Could not send warning: %s",
-            error
-        )
+        logger.warning("Could not send warning: %s", error)
 
 
 # =========================================================
 # معالجة الروابط والإهانات
 # =========================================================
 
-async def moderate_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-
-    if not update.message:
+async def moderate_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
         return False
 
-    if not update.message.text:
-        return False
-
-    # خارج المجموعات لا نطبق نظام الإدارة
     chat_type = update.effective_chat.type
-
-    if chat_type not in (
-        ChatType.GROUP,
-        ChatType.SUPERGROUP,
-    ):
+    if chat_type not in (ChatType.GROUP, ChatType.SUPERGROUP):
         return False
 
-    # المشرفين مستثنين من الحذف
     if await is_admin(update, context):
         return False
 
     text = update.message.text
 
-    # -----------------------------------------------------
     # 1. الروابط الخارجية
-    # -----------------------------------------------------
-
     if contains_external_link(text):
-
-        deleted = await delete_message(
-            update,
-            "external link"
-        )
-
+        deleted = await delete_message(update, "external link")
         if deleted:
-
-            await warn_user(
-                update,
-                "إرسال رابط خارجي داخل المجموعة"
-            )
-
+            await warn_user(update, "إرسال رابط خارجي داخل المجموعة")
         return True
 
-    # -----------------------------------------------------
     # 2. السب والإهانة
-    # -----------------------------------------------------
-
     if contains_insult(text):
-
-        deleted = await delete_message(
-            update,
-            "insult"
-        )
-
+        deleted = await delete_message(update, "insult")
         if deleted:
-
-            await warn_user(
-                update,
-                "استعمال كلام مسيء أو إهانة"
-            )
-
+            await warn_user(update, "استعمال كلام مسيء أو إهانة")
         return True
 
-    # -----------------------------------------------------
-    # 3. الشكاوى لا نحذفها
-    # -----------------------------------------------------
-
+    # 3. الشكاوى (لا نحذفها)
     if contains_complaint(text):
-
-        logger.info(
-            "Possible complaint detected from user %s",
-            update.effective_user.id
-            if update.effective_user
-            else "unknown"
-        )
-
-        # لا نحذف الشكوى.
-        # نخلي Gemini يقدر يتعامل معها.
-
+        logger.info("Possible complaint detected from user %s",
+                    update.effective_user.id if update.effective_user else "unknown")
         return False
 
     return False
@@ -509,22 +321,11 @@ async def moderate_message(
 # /start
 # =========================================================
 
-async def start(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
-
     user = update.effective_user
-
-    name = (
-        user.first_name
-        if user and user.first_name
-        else "صديقي"
-    )
-
+    name = user.first_name if user and user.first_name else "صديقي"
     message = (
         f"👋 مرحبا {name}!\n\n"
         "أنا المساعد الذكي الرسمي تاع Crynova 🤖\n\n"
@@ -536,47 +337,26 @@ async def start(
         "❓ الأسئلة والمشاكل\n\n"
         "اكتبلي سؤالك ونعاونك."
     )
-
     try:
-
-        await update.message.reply_text(
-            message
-        )
-
+        await update.message.reply_text(message)
     except TelegramError as error:
-
-        logger.warning(
-            "Start message error: %s",
-            error
-        )
+        logger.warning("Start message error: %s", error)
 
 
 # =========================================================
 # معالجة الرسائل
 # =========================================================
 
-async def handle_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-
-    if not update.message:
-        return
-
-    if not update.message.text:
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
         return
 
     # الإدارة أولًا
-    moderated = await moderate_message(
-        update,
-        context
-    )
-
+    moderated = await moderate_message(update, context)
     if moderated:
         return
 
     user_message = update.message.text.strip()
-
     if not user_message:
         return
 
@@ -588,47 +368,15 @@ async def handle_message(
 
     # إذا لم يجد، نستدعي الذكاء الاصطناعي
     try:
-
-        # typing
-        try:
-
-            await update.message.chat.send_action(
-                action="typing"
-            )
-
-        except Exception:
-            pass
-
-        # Gemini
-        response = await ask_ai(
-            user_message
-        )
-
+        await update.message.chat.send_action(action="typing")
+        response = await ask_ai(user_message)
         if not response:
-
-            response = (
-                "سمحلي 😅 ما قدرتش نجاوبك حاليا.\n"
-                "عاود جرب بعد شوية."
-            )
-
-        await update.message.reply_text(
-            response
-        )
-
+            response = "سمحلي 😅 ما قدرتش نجاوبك حاليا.\nعاود جرب بعد شوية."
+        await update.message.reply_text(response)
     except Exception as error:
-
-        logger.exception(
-            "Message handler error: %s",
-            error
-        )
-
+        logger.exception("Message handler error: %s", error)
         try:
-
-            await update.message.reply_text(
-                "⚠️ صرات مشكلة مؤقتة.\n"
-                "عاود جرب بعد شوية."
-            )
-
+            await update.message.reply_text("⚠️ صرات مشكلة مؤقتة.\nعاود جرب بعد شوية.")
         except Exception:
             pass
 
@@ -638,106 +386,49 @@ async def handle_message(
 # =========================================================
 
 async def run_bot():
-
-    token = os.getenv(
-        "TELEGRAM_BOT_TOKEN"
-    )
-
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
+        raise ValueError("TELEGRAM_BOT_TOKEN غير موجود.")
 
-        raise ValueError(
-            "TELEGRAM_BOT_TOKEN غير موجود."
-        )
-
-    # تحميل FAQ قبل بدء البوت
-    load_faq()
+    load_faq()  # تحميل الأسئلة الشائعة قبل بدء البوت
 
     while True:
-
         application = None
-
         try:
+            logger.info("Starting Crynova AI Bot...")
+            application = Application.builder().token(token).build()
 
-            logger.info(
-                "Starting Crynova AI Bot..."
-            )
-
-            application = (
-                Application
-                .builder()
-                .token(token)
-                .build()
-            )
-
-            application.add_handler(
-                CommandHandler(
-                    "start",
-                    start
-                )
-            )
-
-            application.add_handler(
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    handle_message
-                )
-            )
+            application.add_handler(CommandHandler("start", start))
+            application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
             await application.initialize()
-
             await application.start()
+            await application.updater.start_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=False)
 
-            await application.updater.start_polling(
-                allowed_updates=Update.ALL_TYPES,
-                drop_pending_updates=False
-            )
-
-            logger.info(
-                "Crynova AI Bot is ONLINE ✅"
-            )
+            logger.info("Crynova AI Bot is ONLINE ✅")
 
             while True:
-
                 await asyncio.sleep(30)
 
         except asyncio.CancelledError:
-
             raise
-
         except Exception as error:
-
-            logger.exception(
-                "Bot crashed: %s",
-                error
-            )
-
-            logger.info(
-                "Restarting in 10 seconds..."
-            )
-
+            logger.exception("Bot crashed: %s", error)
+            logger.info("Restarting in 10 seconds...")
             await asyncio.sleep(10)
-
         finally:
-
             if application:
-
                 try:
-
                     if application.updater:
                         await application.updater.stop()
-
                 except Exception:
                     pass
-
                 try:
                     await application.stop()
-
                 except Exception:
                     pass
-
                 try:
                     await application.shutdown()
-
                 except Exception:
                     pass
 
@@ -747,26 +438,11 @@ async def run_bot():
 # =========================================================
 
 def main():
-
-    logger.info(
-        "Starting Crynova AI service..."
-    )
-
-    web_thread = threading.Thread(
-        target=start_web_server,
-        daemon=True
-    )
-
+    logger.info("Starting Crynova AI service...")
+    web_thread = threading.Thread(target=start_web_server, daemon=True)
     web_thread.start()
+    asyncio.run(run_bot())
 
-    asyncio.run(
-        run_bot()
-    )
-
-
-# =========================================================
-# Start
-# =========================================================
 
 if __name__ == "__main__":
     main()
