@@ -1,5 +1,7 @@
 import logging
 import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from telegram import Update
 from telegram.ext import (
@@ -13,9 +15,9 @@ from telegram.ext import (
 from ai import ask_ai
 
 
-# ==============================
-# إعداد التسجيل
-# ==============================
+# ==========================================
+# Logging
+# ==========================================
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -25,14 +27,58 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ==============================
-# أمر /start
-# ==============================
+# ==========================================
+# Web Server
+# Render يحتاج Port مفتوح
+# ==========================================
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+class HealthHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+
+        self.wfile.write(
+            b"Crynova AI Bot is running!"
+        )
+
+    def log_message(self, format, *args):
+        return
+
+
+def start_web_server():
+
+    port = int(os.environ.get("PORT", 10000))
+
+    server = HTTPServer(
+        ("0.0.0.0", port),
+        HealthHandler
+    )
+
+    logger.info(
+        f"Health server running on port {port}"
+    )
+
+    server.serve_forever()
+
+
+# ==========================================
+# /start
+# ==========================================
+
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
     user = update.effective_user
 
-    name = user.first_name if user and user.first_name else "صديقي"
+    name = (
+        user.first_name
+        if user and user.first_name
+        else "صديقي"
+    )
 
     message = (
         f"👋 مرحبا {name}!\n\n"
@@ -48,15 +94,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(message)
 
 
-# ==============================
+# ==========================================
 # استقبال الرسائل
-# ==============================
+# ==========================================
 
 async def handle_message(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-    if not update.message or not update.message.text:
+
+    if not update.message:
+        return
+
+    if not update.message.text:
         return
 
     user_message = update.message.text.strip()
@@ -65,47 +115,79 @@ async def handle_message(
         return
 
     try:
-        # إرسال السؤال إلى الذكاء الاصطناعي
-        response = await ask_ai(user_message)
+
+        await update.message.chat.send_action(
+            "typing"
+        )
+
+        response = await ask_ai(
+            user_message
+        )
 
         if not response:
+
             response = (
-                "سمحلي، ما قدرتش نجاوبك حاليا 😅\n"
-                "عاود جرب بعد لحظات."
+                "سمحلي 😅\n"
+                "ما قدرتش نجاوبك حاليا."
             )
 
-        await update.message.reply_text(response)
+        await update.message.reply_text(
+            response
+        )
 
     except Exception as error:
-        logger.error("AI error: %s", error)
+
+        logger.error(
+            f"Message error: {error}"
+        )
 
         await update.message.reply_text(
-            "⚠️ صرات مشكلة مؤقتة في المساعد.\n"
-            "عاود المحاولة بعد شوية."
+            "⚠️ صرات مشكلة مؤقتة مع المساعد.\n"
+            "عاود المحاولة بعد لحظات."
         )
 
 
-# ==============================
+# ==========================================
 # تشغيل البوت
-# ==============================
+# ==========================================
 
 def main():
 
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-
-    if not token:
-        raise ValueError(
-            "TELEGRAM_BOT_TOKEN غير موجود في متغيرات البيئة."
-        )
-
-    application = Application.builder().token(token).build()
-
-    # الأوامر
-    application.add_handler(
-        CommandHandler("start", start)
+    token = os.getenv(
+        "TELEGRAM_BOT_TOKEN"
     )
 
-    # الرسائل النصية
+    if not token:
+
+        raise ValueError(
+            "TELEGRAM_BOT_TOKEN غير موجود."
+        )
+
+    # تشغيل Web Server في Thread مستقل
+    web_thread = threading.Thread(
+        target=start_web_server,
+        daemon=True
+    )
+
+    web_thread.start()
+
+    # إنشاء Telegram Application
+    application = (
+        Application
+        .builder()
+        .token(token)
+        .build()
+    )
+
+    # /start
+    application.add_handler(
+        CommandHandler(
+            "start",
+            start
+        )
+    )
+
+    # الرسائل
     application.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
@@ -113,16 +195,19 @@ def main():
         )
     )
 
-    logger.info("Crynova AI Bot is starting...")
+    logger.info(
+        "Crynova AI Bot is starting..."
+    )
 
+    # تشغيل Telegram
     application.run_polling(
         allowed_updates=Update.ALL_TYPES
     )
 
 
-# ==============================
-# نقطة البداية
-# ==============================
+# ==========================================
+# Start
+# ==========================================
 
 if __name__ == "__main__":
     main()
