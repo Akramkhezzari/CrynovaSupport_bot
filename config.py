@@ -1,52 +1,117 @@
 import os
+from dataclasses import dataclass
 
 
-# ==============================
-# Telegram
-# ==============================
+def env_bool(name: str, default: bool = False) -> bool:
+    """
+    تحويل Environment Variable إلى True / False.
+    """
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    value = os.getenv(name)
 
+    if value is None:
+        return default
 
-# ==============================
-# Gemini
-# ==============================
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-
-# الموديل المستخدم
-GEMINI_MODEL = os.getenv(
-    "GEMINI_MODEL",
-    "gemini-2.5-flash-lite"
-)
+    return value.strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
 
-# ==============================
-# إعدادات البوت
-# ==============================
+@dataclass(frozen=True)
+class Settings:
+    # =====================================================
+    # TELEGRAM
+    # =====================================================
 
-BOT_NAME = "Crynova AI"
+    telegram_token: str = os.getenv(
+        "TELEGRAM_BOT_TOKEN",
+        ""
+    )
 
-LANGUAGE = "ar-DZ"
+    # =====================================================
+    # GEMINI
+    # =====================================================
 
+    gemini_api_key: str = os.getenv(
+        "GEMINI_API_KEY",
+        ""
+    )
 
-# ==============================
-# التحقق من الإعدادات
-# ==============================
+    gemini_model: str = os.getenv(
+        "GEMINI_MODEL",
+        "gemini-3.5-flash-lite"
+    )
 
-def validate_config():
+    # =====================================================
+    # RENDER
+    # =====================================================
 
-    missing = []
-
-    if not TELEGRAM_BOT_TOKEN:
-        missing.append("TELEGRAM_BOT_TOKEN")
-
-    if not GEMINI_API_KEY:
-        missing.append("GEMINI_API_KEY")
-
-    if missing:
-        raise ValueError(
-            "المتغيرات التالية غير موجودة: "
-            + ", ".join(missing)
+    port: int = int(
+        os.getenv(
+            "PORT",
+            "10000"
         )
+    )
+
+    # =====================================================
+    # LOGGING
+    # =====================================================
+
+    log_level: str = os.getenv(
+        "LOG_LEVEL",
+        "INFO"
+    )
+
+    # =====================================================
+    # AI MEMORY
+    # =====================================================
+
+    # عدد الرسائل التي يحتفظ بها البوت
+    # لكل مستخدم / محادثة.
+    max_history: int = int(
+        os.getenv(
+            "MAX_HISTORY",
+            "8"
+        )
+    )
+
+    # =====================================================
+    # GEMINI TIMEOUT
+    # =====================================================
+
+    ai_timeout: int = int(
+        os.getenv(
+            "AI_TIMEOUT",
+            "45"
+        )
+    )
+
+    # =====================================================
+    # MESSAGE LIMIT
+    # =====================================================
+
+    max_message_length: int = int(
+        os.getenv(
+            "MAX_MESSAGE_LENGTH",
+            "3500"
+        )
+    )
+
+    # =====================================================
+    # MODERATION
+    # =====================================================
+
+    moderation_enabled: bool = env_bool(
+        "MODERATION_ENABLED",
+        True
+    )
+
+
+# =========================================================
+# SETTINGS INSTANCE
+# =========================================================
+
+settings = Settings()
