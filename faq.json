@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 import re
@@ -31,6 +32,40 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("crynova-ai")
+
+
+# =========================================================
+# تحميل FAQ
+# =========================================================
+
+FAQ_DATA = None
+
+def load_faq():
+    global FAQ_DATA
+    try:
+        with open("faq.json", "r", encoding="utf-8") as f:
+            FAQ_DATA = json.load(f)
+        logger.info("✅ تم تحميل faq.json بنجاح")
+    except Exception as e:
+        logger.error(f"❌ فشل تحميل faq.json: {e}")
+        FAQ_DATA = {
+            "topics": [],
+            "default_response": "🤔 مافهمت سؤالك بزاف. تقدر تسألني على المواضيع المتوفرة."
+        }
+
+
+def get_faq_response(user_message: str) -> str | None:
+    """تبحث في faq.json عن رد مناسب بناءً على الكلمات المفتاحية."""
+    if not FAQ_DATA:
+        return None
+
+    user_message_lower = user_message.lower()
+    for topic in FAQ_DATA.get("topics", []):
+        keywords = topic.get("keywords", [])
+        for keyword in keywords:
+            if keyword in user_message_lower:
+                return topic.get("response", "")
+    return None
 
 
 # =========================================================
@@ -545,6 +580,13 @@ async def handle_message(
     if not user_message:
         return
 
+    # البحث في الأسئلة الشائعة أولاً
+    faq_reply = get_faq_response(user_message)
+    if faq_reply:
+        await update.message.reply_text(faq_reply)
+        return
+
+    # إذا لم يجد، نستدعي الذكاء الاصطناعي
     try:
 
         # typing
@@ -606,6 +648,9 @@ async def run_bot():
         raise ValueError(
             "TELEGRAM_BOT_TOKEN غير موجود."
         )
+
+    # تحميل FAQ قبل بدء البوت
+    load_faq()
 
     while True:
 
