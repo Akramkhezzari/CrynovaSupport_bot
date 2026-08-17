@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger("crynova-ai")
 
 # تهيئة Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("AQ.Ab8RN6Jq0H7HdbGmTCJpUxgZn2mDtbNRDLDmob82ndmGsEg47Q")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 else:
