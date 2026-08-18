@@ -1,8 +1,8 @@
 import asyncio
 import logging
-import os
 import threading
 import time
+from collections import defaultdict, deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from telegram import Update
@@ -38,8 +38,7 @@ logger = logging.getLogger("crynova")
 
 
 # =========================================================
-# HEALTH SERVER
-# خاص بـ Render
+# HEALTH SERVER - RENDER
 # =========================================================
 
 class HealthHandler(BaseHTTPRequestHandler):
@@ -72,6 +71,8 @@ def start_health_server():
 
     while True:
 
+        server = None
+
         try:
 
             server = ThreadingHTTPServer(
@@ -93,6 +94,128 @@ def start_health_server():
             )
 
             time.sleep(5)
+
+        finally:
+
+            if server:
+
+                try:
+                    server.server_close()
+                except Exception:
+                    pass
+
+
+# =========================================================
+# RUNTIME RATE LIMITER
+# =========================================================
+
+class UserRateLimiter:
+
+    def __init__(
+        self,
+        max_requests=8,
+        window_seconds=60
+    ):
+
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+
+        self.requests = defaultdict(deque)
+
+        self.lock = asyncio.Lock()
+
+    async def allowed(
+        self,
+        user_id: int
+    ) -> bool:
+
+        now = time.monotonic()
+
+        async with self.lock:
+
+            queue = self.requests[user_id]
+
+            # حذف الطلبات القديمة
+            while queue:
+
+                if (
+                    now - queue[0]
+                    > self.window_seconds
+                ):
+
+                    queue.popleft()
+
+                else:
+
+                    break
+
+            # تجاوز الحد
+            if len(queue) >= self.max_requests:
+
+                return False
+
+            queue.append(now)
+
+            return True
+
+    async def cleanup(self):
+
+        now = time.monotonic()
+
+        async with self.lock:
+
+            empty_users = []
+
+            for user_id, queue in self.requests.items():
+
+                while queue:
+
+                    if (
+                        now - queue[0]
+                        > self.window_seconds
+                    ):
+
+                        queue.popleft()
+
+                    else:
+
+                        break
+
+                if not queue:
+
+                    empty_users.append(
+                        user_id
+                    )
+
+            for user_id in empty_users:
+
+                self.requests.pop(
+                    user_id,
+                    None
+                )
+
+
+# =========================================================
+# USER MESSAGE LOCK
+# =========================================================
+
+class UserMessageManager:
+
+    def __init__(self):
+
+        self.locks = defaultdict(
+            asyncio.Lock
+        )
+
+    def get_lock(
+        self,
+        user_id: int,
+        chat_id: int
+    ):
+
+        return self.locks[
+            (chat_id, user_id)
+        ]
 
 
 # =========================================================
@@ -132,6 +255,14 @@ async def is_admin(
 
         return False
 
+    except Exception:
+
+        logger.exception(
+            "Admin check failed"
+        )
+
+        return False
+
 
 # =========================================================
 # GET AI
@@ -153,6 +284,32 @@ def get_moderator(
 ) -> ModerationEngine:
 
     return context.application.bot_data["moderator"]
+
+
+# =========================================================
+# GET RATE LIMITER
+# =========================================================
+
+def get_rate_limiter(
+    context: ContextTypes.DEFAULT_TYPE
+) -> UserRateLimiter:
+
+    return context.application.bot_data[
+        "rate_limiter"
+    ]
+
+
+# =========================================================
+# GET USER MANAGER
+# =========================================================
+
+def get_user_manager(
+    context: ContextTypes.DEFAULT_TYPE
+) -> UserMessageManager:
+
+    return context.application.bot_data[
+        "user_manager"
+    ]
 
 
 # =========================================================
@@ -225,7 +382,8 @@ async def rules(
         "• ممنوع السب والإهانة.\n"
         "• ممنوع نشر روابط خارجية غير مسموحة.\n"
         "• إذا عندك شكوى، اشرح المشكل باحترام.\n"
-        "• ما نعطيوش معلومات غير مؤكدة على الحسابات أو الأموال.\n\n"
+        "• ما نعطيوش معلومات غير مؤكدة على الحسابات أو الأموال.\n"
+        "• المساعد مخصص لمواضيع Crynova فقط.\n\n"
 
         "🤖 المساعد موجود باش يعاونك."
     )
@@ -258,7 +416,8 @@ async def status(
     try:
 
         await update.message.reply_text(
-            "🟢 Crynova AI خدام حاليًا."
+            "🟢 Crynova AI خدام حاليًا.\n\n"
+            "🤖 المساعد جاهز لمساعدتك في الأمور المتعلقة بالمنصة."
         )
 
     except TelegramError:
@@ -269,7 +428,134 @@ async def status(
 
 
 # =========================================================
-# معالجة الرسائل
+# SEND SAFE MESSAGE
+# =========================================================
+
+async def safe_reply(
+    update: Update,
+    text: str
+):
+
+    if not update.message:
+        return
+
+    try:
+
+        await update.message.reply_text(
+            text
+        )
+
+    except TelegramError:
+
+        logger.exception(
+            "Could not send Telegram reply"
+        )
+
+    except Exception:
+
+        logger.exception(
+            "Unexpected reply error"
+        )
+
+
+# =========================================================
+# MODERATION
+# =========================================================
+
+async def moderate_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+) -> bool:
+
+    if not update.message:
+        return False
+
+    if not update.effective_chat:
+        return False
+
+    if update.effective_chat.type not in (
+        ChatType.GROUP,
+        ChatType.SUPERGROUP
+    ):
+        return False
+
+    try:
+
+        admin = await is_admin(
+            update,
+            context
+        )
+
+        if admin:
+            return False
+
+        moderator = get_moderator(
+            context
+        )
+
+        result = moderator.inspect(
+            update.message.text
+        )
+
+        if not result.delete:
+            return False
+
+        # =================================================
+        # DELETE
+        # =================================================
+
+        try:
+
+            await update.message.delete()
+
+            logger.info(
+                "Message deleted by moderation | chat=%s | user=%s",
+                update.effective_chat.id,
+                update.effective_user.id
+                if update.effective_user
+                else 0
+            )
+
+        except TelegramError:
+
+            logger.warning(
+                "Could not delete moderated message",
+                exc_info=True
+            )
+
+        # =================================================
+        # WARNING
+        # =================================================
+
+        if result.warning:
+
+            try:
+
+                await update.effective_chat.send_message(
+                    result.warning
+                )
+
+            except TelegramError:
+
+                logger.warning(
+                    "Could not send moderation warning"
+                )
+
+        return True
+
+    except Exception:
+
+        logger.exception(
+            "Moderation failed"
+        )
+
+        # إذا moderation نفسها فشلت،
+        # ما نوقفوش البوت كامل.
+        return False
+
+
+# =========================================================
+# HANDLE MESSAGE
 # =========================================================
 
 async def handle_message(
@@ -277,129 +563,153 @@ async def handle_message(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    if not update.message:
-        return
+    try:
 
-    if not update.message.text:
-        return
+        if not update.message:
+            return
 
-    # =====================================================
-    # MODERATION
-    # =====================================================
+        if not update.message.text:
+            return
 
-    moderator = get_moderator(context)
-
-    admin = await is_admin(
-        update,
-        context
-    )
-
-    chat_type = update.effective_chat.type
-
-    if (
-        not admin
-        and chat_type in (
-            ChatType.GROUP,
-            ChatType.SUPERGROUP
-        )
-    ):
-
-        result = moderator.inspect(
-            update.message.text
+        user_id = (
+            update.effective_user.id
+            if update.effective_user
+            else 0
         )
 
-        if result.delete:
+        chat_id = (
+            update.effective_chat.id
+            if update.effective_chat
+            else 0
+        )
+
+        message = (
+            update.message.text.strip()
+        )
+
+        if not message:
+            return
+
+        # =================================================
+        # MODERATION
+        # =================================================
+
+        deleted = await moderate_message(
+            update,
+            context
+        )
+
+        if deleted:
+            return
+
+        # =================================================
+        # RATE LIMIT
+        # =================================================
+
+        limiter = get_rate_limiter(
+            context
+        )
+
+        allowed = await limiter.allowed(
+            user_id
+        )
+
+        if not allowed:
+
+            await safe_reply(
+                update,
+                "⏳ خويا راك تبعت بسرعة شوية 😅\n"
+                "استنى لحظات وعاود جرب."
+            )
+
+            return
+
+        # =================================================
+        # USER LOCK
+        # =================================================
+
+        manager = get_user_manager(
+            context
+        )
+
+        lock = manager.get_lock(
+            user_id,
+            chat_id
+        )
+
+        # =================================================
+        # PROCESS USER MESSAGE
+        # =================================================
+
+        async with lock:
+
+            # =============================================
+            # TYPING
+            # =============================================
 
             try:
 
-                await update.message.delete()
-
-                logger.info(
-                    "Message deleted by moderation."
+                await update.message.chat.send_action(
+                    "typing"
                 )
 
             except TelegramError:
 
-                logger.warning(
-                    "Could not delete message",
-                    exc_info=True
+                pass
+
+            # =============================================
+            # AI
+            # =============================================
+
+            ai = get_ai(
+                context
+            )
+
+            try:
+
+                answer = await ai.answer(
+                    user_id=user_id,
+                    chat_id=chat_id,
+                    message=message
                 )
 
-            if result.warning:
+            except asyncio.CancelledError:
 
-                try:
+                raise
 
-                    await update.effective_chat.send_message(
-                        result.warning
-                    )
+            except Exception:
 
-                except TelegramError:
+                logger.exception(
+                    "AI request failed | user=%s | chat=%s",
+                    user_id,
+                    chat_id
+                )
 
-                    pass
+                answer = (
+                    "⚠️ صرات مشكلة مؤقتة مع المساعد.\n\n"
+                    "عاود المحاولة بعد لحظات."
+                )
 
-            return
+            # =============================================
+            # RESPONSE
+            # =============================================
 
-    # =====================================================
-    # AI
-    # =====================================================
+            await safe_reply(
+                update,
+                answer
+            )
 
-    ai = get_ai(context)
+    except asyncio.CancelledError:
 
-    user_id = (
-        update.effective_user.id
-        if update.effective_user
-        else 0
-    )
-
-    chat_id = (
-        update.effective_chat.id
-        if update.effective_chat
-        else 0
-    )
-
-    try:
-
-        await update.message.chat.send_action(
-            "typing"
-        )
-
-    except TelegramError:
-
-        pass
-
-    try:
-
-        answer = await ai.answer(
-            user_id=user_id,
-            chat_id=chat_id,
-            message=update.message.text
-        )
+        raise
 
     except Exception:
 
+        # مهم جدًا:
+        # أي خطأ غير متوقع داخل مستخدم واحد
+        # ما يقتلش الـTelegram polling.
         logger.exception(
-            "AI request failed"
-        )
-
-        answer = (
-            "⚠️ صرات مشكلة مؤقتة مع المساعد.\n"
-            "عاود المحاولة بعد لحظات."
-        )
-
-    # =====================================================
-    # SEND RESPONSE
-    # =====================================================
-
-    try:
-
-        await update.message.reply_text(
-            answer
-        )
-
-    except TelegramError:
-
-        logger.exception(
-            "Could not send AI answer"
+            "Unhandled message processing error"
         )
 
 
@@ -412,21 +722,145 @@ async def error_handler(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
+    error = context.error
+
     logger.error(
         "Telegram error: %s",
-        context.error,
-        exc_info=context.error
+        error,
+        exc_info=error
     )
 
 
 # =========================================================
-# تشغيل البوت
+# RATE LIMIT CLEANUP
+# =========================================================
+
+async def rate_limit_cleanup(
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    try:
+
+        limiter = get_rate_limiter(
+            context
+        )
+
+        await limiter.cleanup()
+
+    except Exception:
+
+        logger.exception(
+            "Rate limiter cleanup failed"
+        )
+
+
+# =========================================================
+# BUILD APPLICATION
+# =========================================================
+
+def build_application():
+
+    application = (
+        Application
+        .builder()
+        .token(
+            settings.telegram_token
+        )
+        .concurrent_updates(
+            32
+        )
+        .build()
+    )
+
+    # =====================================================
+    # SERVICES
+    # =====================================================
+
+    application.bot_data["ai"] = (
+        CrynovaAI()
+    )
+
+    application.bot_data["moderator"] = (
+        ModerationEngine()
+    )
+
+    application.bot_data["rate_limiter"] = (
+        UserRateLimiter(
+            max_requests=8,
+            window_seconds=60
+        )
+    )
+
+    application.bot_data["user_manager"] = (
+        UserMessageManager()
+    )
+
+    # =====================================================
+    # COMMANDS
+    # =====================================================
+
+    application.add_handler(
+        CommandHandler(
+            "start",
+            start
+        )
+    )
+
+    application.add_handler(
+        CommandHandler(
+            "rules",
+            rules
+        )
+    )
+
+    application.add_handler(
+        CommandHandler(
+            "status",
+            status
+        )
+    )
+
+    # =====================================================
+    # TEXT
+    # =====================================================
+
+    application.add_handler(
+        MessageHandler(
+            filters.TEXT
+            & ~filters.COMMAND,
+            handle_message
+        )
+    )
+
+    # =====================================================
+    # ERROR HANDLER
+    # =====================================================
+
+    application.add_error_handler(
+        error_handler
+    )
+
+    # =====================================================
+    # CLEANUP JOB
+    # =====================================================
+
+    application.job_queue.run_repeating(
+        rate_limit_cleanup,
+        interval=300,
+        first=300
+    )
+
+    return application
+
+
+# =========================================================
+# RUN BOT
 # =========================================================
 
 async def run_bot():
 
     # =====================================================
-    # CHECK ENV
+    # ENVIRONMENT CHECK
     # =====================================================
 
     if not settings.telegram_token:
@@ -442,8 +876,10 @@ async def run_bot():
         )
 
     # =====================================================
-    # AUTO RESTART LOOP
+    # RESTART LOOP
     # =====================================================
+
+    restart_delay = 10
 
     while True:
 
@@ -455,91 +891,23 @@ async def run_bot():
                 "Starting Crynova AI Bot..."
             )
 
-            # =================================================
-            # AI
-            # =================================================
-
-            ai = CrynovaAI()
+            application = build_application()
 
             # =================================================
-            # MODERATION
+            # INITIALIZE
             # =================================================
 
-            moderator = ModerationEngine()
-
-            # =================================================
-            # TELEGRAM
-            # =================================================
-
-            application = (
-                Application
-                .builder()
-                .token(
-                    settings.telegram_token
-                )
-                .build()
-            )
-
-            # =================================================
-            # SAVE SERVICES
-            # =================================================
-
-            application.bot_data["ai"] = ai
-
-            application.bot_data["moderator"] = moderator
-
-            # =================================================
-            # COMMANDS
-            # =================================================
-
-            application.add_handler(
-                CommandHandler(
-                    "start",
-                    start
-                )
-            )
-
-            application.add_handler(
-                CommandHandler(
-                    "rules",
-                    rules
-                )
-            )
-
-            application.add_handler(
-                CommandHandler(
-                    "status",
-                    status
-                )
-            )
-
-            # =================================================
-            # TEXT
-            # =================================================
-
-            application.add_handler(
-                MessageHandler(
-                    filters.TEXT
-                    & ~filters.COMMAND,
-                    handle_message
-                )
-            )
-
-            # =================================================
-            # ERROR HANDLER
-            # =================================================
-
-            application.add_error_handler(
-                error_handler
-            )
+            await application.initialize()
 
             # =================================================
             # START
             # =================================================
 
-            await application.initialize()
-
             await application.start()
+
+            # =================================================
+            # POLLING
+            # =================================================
 
             await application.updater.start_polling(
                 allowed_updates=Update.ALL_TYPES,
@@ -560,6 +928,18 @@ async def run_bot():
                     30
                 )
 
+                # نتأكد أن updater مازال شغال
+                if (
+                    application.updater
+                    and not application.updater.running
+                ):
+
+                    logger.warning(
+                        "Telegram updater stopped unexpectedly."
+                    )
+
+                    break
+
         except asyncio.CancelledError:
 
             logger.info(
@@ -568,24 +948,26 @@ async def run_bot():
 
             raise
 
-        except Exception:
+        except Exception as error:
 
             logger.exception(
-                "Bot process failed."
+                "Bot process failed: %s",
+                error
             )
 
             logger.info(
-                "Restarting bot in 10 seconds..."
+                "Restarting bot in %s seconds...",
+                restart_delay
             )
 
             await asyncio.sleep(
-                10
+                restart_delay
             )
 
         finally:
 
             # =================================================
-            # SAFE SHUTDOWN
+            # STOP POLLING
             # =================================================
 
             if application:
@@ -594,19 +976,35 @@ async def run_bot():
 
                     if application.updater:
 
-                        await application.updater.stop()
+                        if application.updater.running:
+
+                            await application.updater.stop()
 
                 except Exception:
 
-                    pass
+                    logger.exception(
+                        "Error while stopping updater"
+                    )
+
+                # =============================================
+                # STOP APPLICATION
+                # =============================================
 
                 try:
 
-                    await application.stop()
+                    if application.running:
+
+                        await application.stop()
 
                 except Exception:
 
-                    pass
+                    logger.exception(
+                        "Error while stopping application"
+                    )
+
+                # =============================================
+                # SHUTDOWN
+                # =============================================
 
                 try:
 
@@ -614,7 +1012,9 @@ async def run_bot():
 
                 except Exception:
 
-                    pass
+                    logger.exception(
+                        "Error while shutting down application"
+                    )
 
 
 # =========================================================
@@ -639,7 +1039,7 @@ def main():
     health_thread.start()
 
     # =====================================================
-    # TELEGRAM BOT
+    # TELEGRAM
     # =====================================================
 
     asyncio.run(
@@ -648,7 +1048,7 @@ def main():
 
 
 # =========================================================
-# RUN
+# ENTRY POINT
 # =========================================================
 
 if __name__ == "__main__":
