@@ -106,7 +106,7 @@ def start_health_server():
 
 
 # =========================================================
-# RUNTIME RATE LIMITER
+# RATE LIMITER
 # =========================================================
 
 class UserRateLimiter:
@@ -149,7 +149,7 @@ class UserRateLimiter:
 
                     break
 
-            # تجاوز الحد
+            # إذا تجاوز المستخدم الحد
             if len(queue) >= self.max_requests:
 
                 return False
@@ -158,45 +158,9 @@ class UserRateLimiter:
 
             return True
 
-    async def cleanup(self):
-
-        now = time.monotonic()
-
-        async with self.lock:
-
-            empty_users = []
-
-            for user_id, queue in self.requests.items():
-
-                while queue:
-
-                    if (
-                        now - queue[0]
-                        > self.window_seconds
-                    ):
-
-                        queue.popleft()
-
-                    else:
-
-                        break
-
-                if not queue:
-
-                    empty_users.append(
-                        user_id
-                    )
-
-            for user_id in empty_users:
-
-                self.requests.pop(
-                    user_id,
-                    None
-                )
-
 
 # =========================================================
-# USER MESSAGE LOCK
+# USER MESSAGE MANAGER
 # =========================================================
 
 class UserMessageManager:
@@ -216,52 +180,6 @@ class UserMessageManager:
         return self.locks[
             (chat_id, user_id)
         ]
-
-
-# =========================================================
-# CHECK ADMIN
-# =========================================================
-
-async def is_admin(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-) -> bool:
-
-    if not update.effective_chat:
-        return False
-
-    if not update.effective_user:
-        return False
-
-    if update.effective_chat.type not in (
-        ChatType.GROUP,
-        ChatType.SUPERGROUP
-    ):
-        return False
-
-    try:
-
-        member = await context.bot.get_chat_member(
-            update.effective_chat.id,
-            update.effective_user.id
-        )
-
-        return member.status in (
-            "administrator",
-            "creator"
-        )
-
-    except TelegramError:
-
-        return False
-
-    except Exception:
-
-        logger.exception(
-            "Admin check failed"
-        )
-
-        return False
 
 
 # =========================================================
@@ -313,6 +231,83 @@ def get_user_manager(
 
 
 # =========================================================
+# CHECK ADMIN
+# =========================================================
+
+async def is_admin(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+) -> bool:
+
+    if not update.effective_chat:
+        return False
+
+    if not update.effective_user:
+        return False
+
+    if update.effective_chat.type not in (
+        ChatType.GROUP,
+        ChatType.SUPERGROUP
+    ):
+        return False
+
+    try:
+
+        member = await context.bot.get_chat_member(
+            update.effective_chat.id,
+            update.effective_user.id
+        )
+
+        return member.status in (
+            "administrator",
+            "creator"
+        )
+
+    except TelegramError:
+
+        return False
+
+    except Exception:
+
+        logger.exception(
+            "Admin check failed"
+        )
+
+        return False
+
+
+# =========================================================
+# SAFE REPLY
+# =========================================================
+
+async def safe_reply(
+    update: Update,
+    text: str
+):
+
+    if not update.message:
+        return
+
+    try:
+
+        await update.message.reply_text(
+            text
+        )
+
+    except TelegramError:
+
+        logger.exception(
+            "Could not send Telegram reply"
+        )
+
+    except Exception:
+
+        logger.exception(
+            "Unexpected reply error"
+        )
+
+
+# =========================================================
 # /START
 # =========================================================
 
@@ -351,17 +346,10 @@ async def start(
         "اكتبلي سؤالك ونعاونك."
     )
 
-    try:
-
-        await update.message.reply_text(
-            message
-        )
-
-    except TelegramError:
-
-        logger.exception(
-            "Could not send /start message"
-        )
+    await safe_reply(
+        update,
+        message
+    )
 
 
 # =========================================================
@@ -382,23 +370,16 @@ async def rules(
         "• ممنوع السب والإهانة.\n"
         "• ممنوع نشر روابط خارجية غير مسموحة.\n"
         "• إذا عندك شكوى، اشرح المشكل باحترام.\n"
-        "• ما نعطيوش معلومات غير مؤكدة على الحسابات أو الأموال.\n"
-        "• المساعد مخصص لمواضيع Crynova فقط.\n\n"
+        "• ما نعطيوش معلومات غير مؤكدة.\n"
+        "• المساعد مخصص لمواضيع Crynova.\n\n"
 
         "🤖 المساعد موجود باش يعاونك."
     )
 
-    try:
-
-        await update.message.reply_text(
-            message
-        )
-
-    except TelegramError:
-
-        logger.exception(
-            "Could not send rules"
-        )
+    await safe_reply(
+        update,
+        message
+    )
 
 
 # =========================================================
@@ -413,49 +394,11 @@ async def status(
     if not update.message:
         return
 
-    try:
-
-        await update.message.reply_text(
-            "🟢 Crynova AI خدام حاليًا.\n\n"
-            "🤖 المساعد جاهز لمساعدتك في الأمور المتعلقة بالمنصة."
-        )
-
-    except TelegramError:
-
-        logger.exception(
-            "Could not send status"
-        )
-
-
-# =========================================================
-# SEND SAFE MESSAGE
-# =========================================================
-
-async def safe_reply(
-    update: Update,
-    text: str
-):
-
-    if not update.message:
-        return
-
-    try:
-
-        await update.message.reply_text(
-            text
-        )
-
-    except TelegramError:
-
-        logger.exception(
-            "Could not send Telegram reply"
-        )
-
-    except Exception:
-
-        logger.exception(
-            "Unexpected reply error"
-        )
+    await safe_reply(
+        update,
+        "🟢 Crynova AI خدام حاليًا.\n\n"
+        "🤖 المساعد جاهز لمساعدتك في الأمور المتعلقة بالمنصة."
+    )
 
 
 # =========================================================
@@ -486,6 +429,7 @@ async def moderate_message(
             context
         )
 
+        # الأدمن ما نطبقوش عليه الحذف
         if admin:
             return False
 
@@ -498,10 +442,11 @@ async def moderate_message(
         )
 
         if not result.delete:
+
             return False
 
         # =================================================
-        # DELETE
+        # DELETE MESSAGE
         # =================================================
 
         try:
@@ -549,8 +494,6 @@ async def moderate_message(
             "Moderation failed"
         )
 
-        # إذا moderation نفسها فشلت،
-        # ما نوقفوش البوت كامل.
         return False
 
 
@@ -571,6 +514,13 @@ async def handle_message(
         if not update.message.text:
             return
 
+        message = (
+            update.message.text.strip()
+        )
+
+        if not message:
+            return
+
         user_id = (
             update.effective_user.id
             if update.effective_user
@@ -583,13 +533,6 @@ async def handle_message(
             else 0
         )
 
-        message = (
-            update.message.text.strip()
-        )
-
-        if not message:
-            return
-
         # =================================================
         # MODERATION
         # =================================================
@@ -600,6 +543,7 @@ async def handle_message(
         )
 
         if deleted:
+
             return
 
         # =================================================
@@ -619,7 +563,7 @@ async def handle_message(
             await safe_reply(
                 update,
                 "⏳ خويا راك تبعت بسرعة شوية 😅\n"
-                "استنى لحظات وعاود جرب."
+                "استنى شوية وعاود جرب."
             )
 
             return
@@ -636,10 +580,6 @@ async def handle_message(
             user_id,
             chat_id
         )
-
-        # =================================================
-        # PROCESS USER MESSAGE
-        # =================================================
 
         async with lock:
 
@@ -677,12 +617,13 @@ async def handle_message(
 
                 raise
 
-            except Exception:
+            except Exception as error:
 
                 logger.exception(
-                    "AI request failed | user=%s | chat=%s",
+                    "AI request failed | user=%s | chat=%s | error=%s",
                     user_id,
-                    chat_id
+                    chat_id,
+                    error
                 )
 
                 answer = (
@@ -691,7 +632,7 @@ async def handle_message(
                 )
 
             # =============================================
-            # RESPONSE
+            # SEND ANSWER
             # =============================================
 
             await safe_reply(
@@ -705,9 +646,7 @@ async def handle_message(
 
     except Exception:
 
-        # مهم جدًا:
-        # أي خطأ غير متوقع داخل مستخدم واحد
-        # ما يقتلش الـTelegram polling.
+        # خطأ في مستخدم واحد لا يوقف البوت
         logger.exception(
             "Unhandled message processing error"
         )
@@ -729,29 +668,6 @@ async def error_handler(
         error,
         exc_info=error
     )
-
-
-# =========================================================
-# RATE LIMIT CLEANUP
-# =========================================================
-
-async def rate_limit_cleanup(
-    context: ContextTypes.DEFAULT_TYPE
-):
-
-    try:
-
-        limiter = get_rate_limiter(
-            context
-        )
-
-        await limiter.cleanup()
-
-    except Exception:
-
-        logger.exception(
-            "Rate limiter cleanup failed"
-        )
 
 
 # =========================================================
@@ -821,7 +737,7 @@ def build_application():
     )
 
     # =====================================================
-    # TEXT
+    # TEXT MESSAGES
     # =====================================================
 
     application.add_handler(
@@ -841,14 +757,20 @@ def build_application():
     )
 
     # =====================================================
-    # CLEANUP JOB
+    # IMPORTANT
     # =====================================================
-
-    application.job_queue.run_repeating(
-        rate_limit_cleanup,
-        interval=300,
-        first=300
-    )
+    #
+    # لا نستعمل:
+    #
+    # application.job_queue.run_repeating(...)
+    #
+    # لأن JobQueue غير مفعلة في إعدادات
+    # python-telegram-bot الحالية.
+    #
+    # الـRateLimiter ينظف الطلبات القديمة
+    # تلقائيًا عند وصول طلب جديد.
+    #
+    # =====================================================
 
     return application
 
@@ -860,7 +782,7 @@ def build_application():
 async def run_bot():
 
     # =====================================================
-    # ENVIRONMENT CHECK
+    # ENVIRONMENT
     # =====================================================
 
     if not settings.telegram_token:
@@ -876,7 +798,7 @@ async def run_bot():
         )
 
     # =====================================================
-    # RESTART LOOP
+    # AUTO RESTART
     # =====================================================
 
     restart_delay = 10
@@ -890,6 +812,10 @@ async def run_bot():
             logger.info(
                 "Starting Crynova AI Bot..."
             )
+
+            # =================================================
+            # BUILD
+            # =================================================
 
             application = build_application()
 
@@ -906,7 +832,7 @@ async def run_bot():
             await application.start()
 
             # =================================================
-            # POLLING
+            # START POLLING
             # =================================================
 
             await application.updater.start_polling(
@@ -928,7 +854,7 @@ async def run_bot():
                     30
                 )
 
-                # نتأكد أن updater مازال شغال
+                # إذا توقف updater لأي سبب
                 if (
                     application.updater
                     and not application.updater.running
@@ -967,18 +893,19 @@ async def run_bot():
         finally:
 
             # =================================================
-            # STOP POLLING
+            # STOP UPDATER
             # =================================================
 
             if application:
 
                 try:
 
-                    if application.updater:
+                    if (
+                        application.updater
+                        and application.updater.running
+                    ):
 
-                        if application.updater.running:
-
-                            await application.updater.stop()
+                        await application.updater.stop()
 
                 except Exception:
 
@@ -1039,7 +966,7 @@ def main():
     health_thread.start()
 
     # =====================================================
-    # TELEGRAM
+    # TELEGRAM BOT
     # =====================================================
 
     asyncio.run(
