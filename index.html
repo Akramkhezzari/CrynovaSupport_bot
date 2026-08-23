@@ -1,155 +1,1484 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
-  <title>Crynova Support Center</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>دعم Crynova</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js">
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ============================================================
+           RESET & VARIABLES
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-input: #f0f4f8;
+            --bg-nav: #ffffff;
+
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #8a8aaa;
+            --text-white: #ffffff;
+
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --accent-glow: rgba(108, 92, 231, 0.15);
+            --accent-gradient: linear-gradient(135deg, #6c5ce7, #a29bfe);
+
+            --success: #00b894;
+            --success-light: rgba(0, 184, 148, 0.12);
+            --warning: #fdcb6e;
+            --warning-light: rgba(253, 203, 110, 0.12);
+            --danger: #e17055;
+            --danger-light: rgba(225, 112, 85, 0.12);
+            --info: #0984e3;
+            --info-light: rgba(9, 132, 227, 0.12);
+
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0 20px;
+        }
+        .app-header .logo {
+            font-size: 20px;
+            font-weight: 900;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .app-header .logo i {
+            -webkit-text-fill-color: var(--accent);
+            font-size: 24px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background: var(--bg-input);
+            border-color: var(--accent);
+        }
+        .back-btn i {
+            font-size: 14px;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .card-title i {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            width: 100%;
+            font-family: inherit;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 24px rgba(108, 92, 231, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(108, 92, 231, 0.35);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 184, 148, 0.35);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(225, 112, 85, 0.35);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .btn-sm {
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        .btn-block {
+            width: 100%;
+        }
+
+        /* INPUTS */
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .input-group label .required {
+            color: var(--danger);
+            margin-right: 2px;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: var(--transition);
+            font-family: inherit;
+            resize: vertical;
+        }
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+            background: var(--bg-card);
+        }
+        .input-group textarea {
+            min-height: 120px;
+        }
+
+        /* FAQ SECTION */
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-item .question {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-primary);
+        }
+        .faq-item .question i {
+            transition: var(--transition);
+            color: var(--text-muted);
+        }
+        .faq-item .answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+        .faq-item.active .answer {
+            max-height: 500px;
+            padding-top: 12px;
+        }
+        .faq-item.active .question i {
+            transform: rotate(180deg);
+        }
+
+        /* CONTACT OPTIONS */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .contact-card {
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        .contact-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .contact-card .icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .contact-card .label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .contact-card .sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* STATUS */
+        .status {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .status-success {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        .status-pending {
+            background: var(--warning-light);
+            color: #b7950b;
+        }
+        .status-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+        .status-info {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        /* LIST ITEMS */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .list-item .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .list-item .left .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .list-item .info .title {
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .list-item .info .sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .list-item .right {
+            text-align: left;
+            flex-shrink: 0;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* TICKET SYSTEM */
+        .ticket-item {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .ticket-item:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+        .ticket-item .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .ticket-item .ticket-title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .ticket-item .ticket-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .ticket-item .ticket-status {
+            font-size: 12px;
+        }
+        .ticket-item .ticket-preview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 440px;
+            background: var(--bg-nav);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 6px;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            gap: 8px;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-weight: 600;
+            flex: 1;
+        }
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 2px;
+            transition: var(--transition);
+        }
+        .nav-item.active {
+            color: var(--accent);
+        }
+        .nav-item.active i {
+            transform: scale(1.1);
+        }
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        /* PAGES */
+        .page {
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+            padding-bottom: 80px;
+        }
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            z-index: 9999;
+            box-shadow: var(--shadow-lg);
+            font-family: 'Cairo', sans-serif;
+            max-width: 90%;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 420px) {
+            .app-container {
+                padding: 0 4px;
+            }
+            .contact-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .contact-card {
+                padding: 14px 8px;
+            }
+            .contact-card .icon {
+                font-size: 24px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .btn {
+                padding: 12px 18px;
+                font-size: 14px;
+            }
+        }
+
+        /* UTILITY */
+        .text-center {
+            text-align: center;
+        }
+        .text-accent {
+            color: var(--accent);
+        }
+        .text-success {
+            color: var(--success);
+        }
+        .text-danger {
+            color: var(--danger);
+        }
+        .text-muted {
+            color: var(--text-secondary);
+        }
+        .text-white {
+            color: white;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+        .flex {
+            display: flex;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .gap-12 {
+            gap: 12px;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+    </style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">C</div>
-        <div>
-          <strong>Crynova</strong>
-          <span>Support Center</span>
+
+    <div class="app-container">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fas fa-headset"></i>
+                دعم Crynova
+            </div>
+            <button class="back-btn" onclick="closeApp()">
+                <i class="fas fa-times"></i> إغلاق
+            </button>
+        </header>
+
+        <!-- ========== PAGE: HOME ========== -->
+        <div class="page active" id="page-home">
+
+            <!-- Welcome Card -->
+            <div class="card" style="background:var(--accent-gradient);border:none;color:white;">
+                <div style="text-align:center;padding:8px 0;">
+                    <div style="font-size:48px;margin-bottom:8px;">👋</div>
+                    <div style="font-size:22px;font-weight:900;">مرحباً بك في الدعم</div>
+                    <div style="font-size:15px;opacity:0.9;">فريق Crynova هنا لمساعدتك على مدار الساعة</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-bolt"></i>
+                    خيارات سريعة
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <button class="btn btn-primary btn-sm" onclick="navigateTo('tickets')">
+                        <i class="fas fa-ticket"></i> تذاكري
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="navigateTo('new-ticket')">
+                        <i class="fas fa-plus-circle"></i> تذكرة جديدة
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="navigateTo('faq')">
+                        <i class="fas fa-question-circle"></i> الأسئلة الشائعة
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="openContact()">
+                        <i class="fas fa-phone"></i> اتصل بنا
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-chart-simple"></i>
+                    إحصائيات الدعم
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                    <div style="text-align:center;background:var(--bg-input);padding:12px;border-radius:var(--radius-sm);">
+                        <div style="font-size:24px;font-weight:900;color:var(--accent);" id="ticketOpen">0</div>
+                        <div style="font-size:12px;color:var(--text-secondary);font-weight:600;">مفتوحة</div>
+                    </div>
+                    <div style="text-align:center;background:var(--bg-input);padding:12px;border-radius:var(--radius-sm);">
+                        <div style="font-size:24px;font-weight:900;color:var(--warning);" id="ticketPending">0</div>
+                        <div style="font-size:12px;color:var(--text-secondary);font-weight:600;">قيد المعالجة</div>
+                    </div>
+                    <div style="text-align:center;background:var(--bg-input);padding:12px;border-radius:var(--radius-sm);">
+                        <div style="font-size:24px;font-weight:900;color:var(--success);" id="ticketClosed">0</div>
+                        <div style="font-size:12px;color:var(--text-secondary);font-weight:600;">مغلقة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tickets -->
+            <div class="card">
+                <div class="flex-between">
+                    <div class="card-title" style="margin-bottom:0;">آخر التذاكر</div>
+                    <button class="btn btn-sm btn-ghost" onclick="navigateTo('tickets')" style="width:auto;">
+                        عرض الكل <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+                <div id="recentTickets">
+                    <div class="text-muted text-center" style="padding:20px 0;font-size:14px;">لا توجد تذاكر حديثة</div>
+                </div>
+            </div>
+
+            <!-- Quick Contact -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-headset"></i>
+                    تواصل معنا
+                </div>
+                <div class="contact-grid">
+                    <a href="https://t.me/CrynovaSupport_bot" class="contact-card" target="_blank">
+                        <span class="icon">🤖</span>
+                        <div class="label">البوت</div>
+                        <div class="sub">@CrynovaSupport_bot</div>
+                    </a>
+                    <a href="https://t.me/CrynovaSupport" class="contact-card" target="_blank">
+                        <span class="icon">💬</span>
+                        <div class="label">الدعم المباشر</div>
+                        <div class="sub">محادثة فورية</div>
+                    </a>
+                    <a href="mailto:support@crynova.com" class="contact-card">
+                        <span class="icon">📧</span>
+                        <div class="label">البريد الإلكتروني</div>
+                        <div class="sub">support@crynova.com</div>
+                    </a>
+                    <a href="#" class="contact-card" onclick="showToast('سيتم الرد عليك خلال 24 ساعة')">
+                        <span class="icon">📝</span>
+                        <div class="label">استمارة</div>
+                        <div class="sub">اترك رسالة</div>
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-      <button class="icon-btn" id="notificationsBtn" aria-label="الإشعارات">🔔<span class="notification-dot"></span></button>
-    </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-glow"></div>
-        <div class="hero-content">
-          <span class="eyebrow">مركز الدعم الرسمي</span>
-          <h1>مرحباً بك، <span id="userName">عضو Crynova</span> 👋</h1>
-          <p>فريق الدعم هنا لمساعدتك في كل ما يتعلق بحسابك وعملياتك على المنصة.</p>
-          <div class="status-pill"><span></span> حسابك مؤهل للدعم</div>
+        <!-- ========== PAGE: FAQ ========== -->
+        <div class="page" id="page-faq">
+            <div class="flex-between" style="margin-bottom:16px;">
+                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-question-circle text-accent"></i>
+                    الأسئلة الشائعة
+                </h2>
+                <button class="back-btn" onclick="navigateTo('home')">
+                    <i class="fas fa-arrow-right"></i> رجوع
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="faq-item active">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>كيف يمكنني الاستثمار في Crynova؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        يمكنك الاستثمار من خلال اختيار الخطة المناسبة من قائمة "العوائد" في التطبيق الرئيسي، ثم تحديد المبلغ وتأكيد الاستثمار. الحد الأدنى للاستثمار هو 2,000 DZD.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>كيف أحصل على الأرباح اليومية؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        الأرباح اليومية تُضاف تلقائياً إلى محفظة المكافآت في حسابك كل يوم في منتصف الليل. يمكنك متابعة أرباحك من خلال قسم "استثماراتي".
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>ما هي مكافأة أول استثمار؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        عند قيامك بأول استثمار لك في المنصة، ستحصل على مكافأة إضافية بنسبة 7% من مبلغ الاستثمار، تُضاف تلقائياً إلى محفظة المكافآت.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>كيف يعمل نظام الإحالات؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        عند دعوة شخص للانضمام عبر رابطك، تحصل على 15% من مبلغ إيداعه الأول. كما تحصل على 5% من إيداع من يدعوه المدعو المباشر (المستوى الثاني).
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>كيف يمكنني سحب أرباحي؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        يمكنك طلب السحب من خلال قسم "السحب" في التطبيق الرئيسي. الحد الأدنى للسحب هو 1,000 DZD، مع رسوم سحب 10% من المبلغ. يتم التحويل عبر Baridi Mob.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>ما هي مدة الاستثمار؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        جميع خطط الاستثمار في Crynova مدتها 30 يوماً. بعد انتهاء المدة، يتم إغلاق الاستثمار تلقائياً ويمكنك سحب رأس المال والأرباح.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>هل يمكنني سحب رأس المال قبل انتهاء المدة؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        حالياً، لا يمكن سحب رأس المال قبل انتهاء مدة الاستثمار (30 يوماً) للحفاظ على استقرار النظام وضمان أرباح جميع المستثمرين.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="question" onclick="toggleFAQ(this)">
+                        <span>كيف أتواصل مع فريق الدعم؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="answer">
+                        يمكنك التواصل معنا عبر بوت الدعم @CrynovaSupport_bot، أو عبر الدعم المباشر في Telegram، أو إرسال بريد إلكتروني إلى support@crynova.com.
+                    </div>
+                </div>
+            </div>
         </div>
-      </section>
 
-      <section class="stats-grid">
-        <article class="stat-card">
-          <span>💰</span>
-          <div><small>إجمالي الإيداعات</small><strong id="totalDeposits">25,000 دج</strong></div>
-        </article>
-        <article class="stat-card">
-          <span>📈</span>
-          <div><small>الاستثمارات</small><strong id="investments">2</strong></div>
-        </article>
-        <article class="stat-card">
-          <span>🎫</span>
-          <div><small>تذاكر مفتوحة</small><strong id="openTickets">1</strong></div>
-        </article>
-      </section>
+        <!-- ========== PAGE: TICKETS ========== -->
+        <div class="page" id="page-tickets">
+            <div class="flex-between" style="margin-bottom:16px;">
+                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-ticket text-accent"></i>
+                    تذاكر الدعم
+                </h2>
+                <button class="back-btn" onclick="navigateTo('home')">
+                    <i class="fas fa-arrow-right"></i> رجوع
+                </button>
+            </div>
 
-      <section class="section-head">
-        <div>
-          <span class="eyebrow">الخدمة</span>
-          <h2>كيف يمكننا مساعدتك؟</h2>
-        </div>
-      </section>
+            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-primary" onclick="filterTickets('all')" data-filter="all" style="width:auto;">الكل</button>
+                <button class="btn btn-sm btn-ghost" onclick="filterTickets('open')" data-filter="open" style="width:auto;">مفتوحة</button>
+                <button class="btn btn-sm btn-ghost" onclick="filterTickets('pending')" data-filter="pending" style="width:auto;">قيد المعالجة</button>
+                <button class="btn btn-sm btn-ghost" onclick="filterTickets('closed')" data-filter="closed" style="width:auto;">مغلقة</button>
+                <button class="btn btn-sm btn-success" onclick="navigateTo('new-ticket')" style="width:auto;margin-right:auto;">
+                    <i class="fas fa-plus"></i> جديد
+                </button>
+            </div>
 
-      <section class="support-grid">
-        <button class="support-card" data-category="deposit">
-          <div class="support-icon">💳</div><div><strong>مشكلة في الإيداع</strong><small>تأخر أو عدم ظهور الإيداع</small></div><b>‹</b>
-        </button>
-        <button class="support-card" data-category="withdrawal">
-          <div class="support-icon">💸</div><div><strong>مشكلة في السحب</strong><small>السحب قيد الانتظار أو مرفوض</small></div><b>‹</b>
-        </button>
-        <button class="support-card" data-category="investment">
-          <div class="support-icon">📊</div><div><strong>الاستثمار</strong><small>استفسار حول الاستثمار والأرباح</small></div><b>‹</b>
-        </button>
-        <button class="support-card" data-category="bonus">
-          <div class="support-icon">🎁</div><div><strong>المكافآت</strong><small>مكافأة الإيداع أو العروض</small></div><b>‹</b>
-        </button>
-        <button class="support-card" data-category="referral">
-          <div class="support-icon">👥</div><div><strong>الإحالات</strong><small>الرابط والعمولات والإحالات</small></div><b>‹</b>
-        </button>
-        <button class="support-card" data-category="account">
-          <div class="support-icon">🔐</div><div><strong>الحساب</strong><small>الدخول أو بيانات الحساب</small></div><b>‹</b>
-        </button>
-      </section>
-
-      <section class="tickets-section">
-        <div class="section-head">
-          <div><span class="eyebrow">Support Tickets</span><h2>تذاكر الدعم</h2></div>
-          <button class="primary-btn compact" id="newTicketBtn">+ تذكرة جديدة</button>
+            <div id="ticketsList">
+                <div class="text-muted text-center" style="padding:32px 0;">
+                    <div style="font-size:48px;margin-bottom:12px;">🎫</div>
+                    <div style="font-size:16px;">لا توجد تذاكر</div>
+                    <div style="font-size:14px;">أنشئ تذكرة جديدة للحصول على الدعم</div>
+                </div>
+            </div>
         </div>
 
-        <div class="ticket-list" id="ticketList"></div>
-      </section>
-    </main>
+        <!-- ========== PAGE: NEW TICKET ========== -->
+        <div class="page" id="page-new-ticket">
+            <div class="flex-between" style="margin-bottom:16px;">
+                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-plus-circle text-success"></i>
+                    تذكرة جديدة
+                </h2>
+                <button class="back-btn" onclick="navigateTo('home')">
+                    <i class="fas fa-arrow-right"></i> رجوع
+                </button>
+            </div>
 
+            <div class="card">
+                <div class="input-group">
+                    <label>عنوان التذكرة <span class="required">*</span></label>
+                    <input type="text" id="ticketTitle" placeholder="مثال: مشكلة في السحب" maxlength="100">
+                </div>
+
+                <div class="input-group">
+                    <label>القسم <span class="required">*</span></label>
+                    <select id="ticketCategory">
+                        <option value="general">عام</option>
+                        <option value="deposit">الإيداع</option>
+                        <option value="withdraw">السحب</option>
+                        <option value="investment">الاستثمار</option>
+                        <option value="referral">الإحالات</option>
+                        <option value="technical">مشكلة تقنية</option>
+                        <option value="other">أخرى</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>تفاصيل المشكلة <span class="required">*</span></label>
+                    <textarea id="ticketDescription" placeholder="اشرح مشكلتك بالتفصيل..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>أرفق لقطة شاشة (اختياري)</label>
+                    <input type="file" id="ticketAttachment" accept="image/*" style="padding:12px;">
+                </div>
+
+                <button class="btn btn-success" onclick="submitTicket()">
+                    <i class="fas fa-paper-plane"></i> إرسال التذكرة
+                </button>
+            </div>
+
+            <div class="card" style="background:var(--warning-light);border-color:var(--warning);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <i class="fas fa-info-circle" style="font-size:24px;color:var(--warning);"></i>
+                    <div>
+                        <div style="font-weight:700;">ملاحظة مهمة</div>
+                        <div style="font-size:14px;color:var(--text-secondary);">سيتم الرد على تذكرتك خلال 24 ساعة. تأكد من إدخال بيانات صحيحة لتسريع عملية المعالجة.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== PAGE: TICKET DETAIL ========== -->
+        <div class="page" id="page-ticket-detail">
+            <div class="flex-between" style="margin-bottom:16px;">
+                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-ticket text-accent"></i>
+                    <span id="ticketDetailTitle">تفاصيل التذكرة</span>
+                </h2>
+                <button class="back-btn" onclick="navigateTo('tickets')">
+                    <i class="fas fa-arrow-right"></i> رجوع
+                </button>
+            </div>
+
+            <div id="ticketDetailContent">
+                <!-- يتم ملؤها بواسطة JS -->
+            </div>
+        </div>
+
+        <!-- ========== PAGE: CONTACT ========== -->
+        <div class="page" id="page-contact">
+            <div class="flex-between" style="margin-bottom:16px;">
+                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-headset text-success"></i>
+                    اتصل بنا
+                </h2>
+                <button class="back-btn" onclick="navigateTo('home')">
+                    <i class="fas fa-arrow-right"></i> رجوع
+                </button>
+            </div>
+
+            <div class="card" style="background:var(--accent-gradient);border:none;color:white;text-align:center;">
+                <div style="font-size:52px;margin-bottom:8px;">💬</div>
+                <div style="font-size:20px;font-weight:900;">نحن هنا لمساعدتك</div>
+                <div style="font-size:15px;opacity:0.9;">فريق الدعم متاح 24/7 للإجابة على استفساراتك</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-robot"></i> بوت الدعم</div>
+                <div class="contact-grid" style="grid-template-columns:1fr;">
+                    <a href="https://t.me/CrynovaSupport_bot" class="contact-card" target="_blank" style="display:flex;align-items:center;gap:16px;padding:16px;text-align:right;">
+                        <span class="icon" style="font-size:28px;margin:0;">🤖</span>
+                        <div>
+                            <div class="label" style="font-size:16px;">@CrynovaSupport_bot</div>
+                            <div class="sub">تواصل مع البوت للحصول على مساعدة فورية</div>
+                        </div>
+                        <span style="margin-right:auto;color:var(--accent);"><i class="fas fa-arrow-left"></i></span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-users"></i> الدعم المباشر</div>
+                <div class="contact-grid" style="grid-template-columns:1fr;">
+                    <a href="https://t.me/CrynovaSupport" class="contact-card" target="_blank" style="display:flex;align-items:center;gap:16px;padding:16px;text-align:right;">
+                        <span class="icon" style="font-size:28px;margin:0;">💬</span>
+                        <div>
+                            <div class="label" style="font-size:16px;">قناة الدعم</div>
+                            <div class="sub">تواصل مع فريق الدعم البشري</div>
+                        </div>
+                        <span style="margin-right:auto;color:var(--accent);"><i class="fas fa-arrow-left"></i></span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><i class="fas fa-envelope"></i> البريد الإلكتروني</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" value="support@crynova.com" readonly style="flex:1;padding:12px 14px;background:var(--bg-input);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-weight:600;font-size:14px;font-family:inherit;">
+                    <button class="btn btn-primary btn-sm" style="width:auto;padding:12px 16px;" onclick="copyText('support@crynova.com')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <a href="mailto:support@crynova.com" class="btn btn-outline mt-8">
+                    <i class="fas fa-envelope"></i> إرسال بريد إلكتروني
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== BOTTOM NAVIGATION ===== -->
     <nav class="bottom-nav">
-      <button class="nav-item active"><span>⌂</span><small>الرئيسية</small></button>
-      <button class="nav-item" id="ticketsNav"><span>🎫</span><small>تذاكري</small></button>
-      <button class="nav-item" id="profileNav"><span>👤</span><small>حسابي</small></button>
+        <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
+            <i class="fas fa-house"></i>
+            <span>الرئيسية</span>
+        </button>
+        <button class="nav-item" data-page="faq" onclick="navigateTo('faq')">
+            <i class="fas fa-question-circle"></i>
+            <span>الأسئلة</span>
+        </button>
+        <button class="nav-item" data-page="tickets" onclick="navigateTo('tickets')">
+            <i class="fas fa-ticket"></i>
+            <span>تذاكري</span>
+        </button>
+        <button class="nav-item" data-page="contact" onclick="navigateTo('contact')">
+            <i class="fas fa-headset"></i>
+            <span>اتصل بنا</span>
+        </button>
     </nav>
-  </div>
 
-  <!-- Ticket modal -->
-  <div class="modal" id="ticketModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="ticketModal"></div>
-    <div class="modal-card">
-      <div class="modal-head">
-        <div><span class="eyebrow">NEW TICKET</span><h2>فتح تذكرة دعم</h2></div>
-        <button class="close-btn" data-close="ticketModal">×</button>
-      </div>
+    <script>
+        // ============================================================
+        // 1. STATE
+        // ============================================================
+        let tickets = [];
+        let currentTicketFilter = 'all';
+        let currentTicketId = null;
 
-      <form id="ticketForm">
-        <label>نوع المشكلة
-          <select id="category" required>
-            <option value="">اختر القسم</option>
-            <option value="deposit">💳 مشكلة في الإيداع</option>
-            <option value="withdrawal">💸 مشكلة في السحب</option>
-            <option value="investment">📊 الاستثمار</option>
-            <option value="bonus">🎁 المكافآت</option>
-            <option value="referral">👥 الإحالات</option>
-            <option value="account">🔐 الحساب</option>
-            <option value="other">💬 مشكلة أخرى</option>
-          </select>
-        </label>
+        // ============================================================
+        // 2. TELEGRAM INTEGRATION
+        // ============================================================
+        function getTelegramUser() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                return tg.initDataUnsafe?.user || null;
+            }
+            return null;
+        }
 
-        <label>المبلغ (اختياري)
-          <input id="amount" type="number" min="0" placeholder="مثال: 5000">
-        </label>
+        // ============================================================
+        // 3. NAVIGATION
+        // ============================================================
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const el = document.getElementById('page-' + page);
+            if (el) el.classList.add('active');
 
-        <label>اشرح مشكلتك
-          <textarea id="description" rows="5" required placeholder="اكتب تفاصيل المشكلة بوضوح..."></textarea>
-        </label>
+            document.querySelectorAll('.nav-item').forEach(b => {
+                b.classList.toggle('active', b.dataset.page === page);
+            });
 
-        <label class="upload-box">
-          <input id="attachment" type="file" accept="image/*">
-          <span>📎</span>
-          <div><strong>إرفاق إثبات</strong><small>صورة واحدة، حتى 5MB</small></div>
-        </label>
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp;
+                page === 'home' ? tg.BackButton.hide() : tg.BackButton.show();
+            }
+        }
 
-        <button class="primary-btn full" type="submit">إرسال التذكرة</button>
-      </form>
-    </div>
-  </div>
+        function closeApp() {
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.close();
+            } else {
+                window.close();
+            }
+        }
 
-  <!-- Ticket details modal -->
-  <div class="modal" id="detailsModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="detailsModal"></div>
-    <div class="modal-card details-card">
-      <div class="modal-head">
-        <div><span class="eyebrow" id="detailsId">#CRY-0000</span><h2 id="detailsTitle">تذكرة الدعم</h2></div>
-        <button class="close-btn" data-close="detailsModal">×</button>
-      </div>
-      <div class="conversation" id="conversation"></div>
-      <form class="reply-form" id="replyForm">
-        <input id="replyInput" placeholder="اكتب ردك..." autocomplete="off" required>
-        <button type="submit">إرسال</button>
-      </form>
-    </div>
-  </div>
+        // ============================================================
+        // 4. TOAST
+        // ============================================================
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
 
-  <div class="toast" id="toast"></div>
-  <script src="script.js"></script>
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================================
+        // 5. COPY
+        // ============================================================
+        function copyText(text) {
+            if (!text) return;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => showToast('✅ تم النسخ'));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showToast('✅ تم النسخ');
+            }
+        }
+
+        // ============================================================
+        // 6. FAQ
+        // ============================================================
+        function toggleFAQ(element) {
+            const item = element.closest('.faq-item');
+            item.classList.toggle('active');
+        }
+
+        // ============================================================
+        // 7. TICKETS SYSTEM
+        // ============================================================
+        function generateTicketId() {
+            return 'TKT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6)
+                .toUpperCase();
+        }
+
+        function getTicketStatusBadge(status) {
+            const map = {
+                'open': 'status-info',
+                'pending': 'status-pending',
+                'closed': 'status-success'
+            };
+            return map[status] || 'status-info';
+        }
+
+        function getTicketStatusText(status) {
+            const map = {
+                'open': 'مفتوحة',
+                'pending': 'قيد المعالجة',
+                'closed': 'مغلقة'
+            };
+            return map[status] || status;
+        }
+
+        function submitTicket() {
+            const title = document.getElementById('ticketTitle').value.trim();
+            const category = document.getElementById('ticketCategory').value;
+            const description = document.getElementById('ticketDescription').value.trim();
+            const attachment = document.getElementById('ticketAttachment').files[0];
+
+            if (!title) {
+                showToast('❌ يرجى إدخال عنوان التذكرة');
+                return;
+            }
+            if (!description || description.length < 20) {
+                showToast('❌ يرجى كتابة تفاصيل المشكلة (20 حرف على الأقل)');
+                return;
+            }
+
+            const tgUser = getTelegramUser();
+            const ticket = {
+                id: generateTicketId(),
+                title: title,
+                category: category,
+                description: description,
+                status: 'open',
+                createdAt: new Date().toISOString(),
+                userId: tgUser?.id || 'guest',
+                userName: tgUser?.first_name || 'زائر',
+                messages: [{
+                    from: 'user',
+                    text: description,
+                    timestamp: new Date().toISOString()
+                }],
+                attachment: attachment ? attachment.name : null
+            };
+
+            tickets.unshift(ticket);
+            renderTickets();
+            updateStats();
+
+            // Reset form
+            document.getElementById('ticketTitle').value = '';
+            document.getElementById('ticketDescription').value = '';
+            document.getElementById('ticketAttachment').value = '';
+
+            showToast('✅ تم إنشاء التذكرة بنجاح! سنرد عليك خلال 24 ساعة');
+            navigateTo('tickets');
+        }
+
+        function renderTickets() {
+            const container = document.getElementById('ticketsList');
+            const filtered = currentTicketFilter === 'all' ?
+                tickets :
+                tickets.filter(t => t.status === currentTicketFilter);
+
+            if (!filtered.length) {
+                container.innerHTML = `
+                    <div class="text-muted text-center" style="padding:32px 0;">
+                        <div style="font-size:48px;margin-bottom:12px;">🎫</div>
+                        <div style="font-size:16px;">لا توجد تذاكر</div>
+                        <div style="font-size:14px;">أنشئ تذكرة جديدة للحصول على الدعم</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => `
+                <div class="ticket-item" onclick="viewTicket('${t.id}')">
+                    <div class="ticket-header">
+                        <span class="ticket-title">${t.title}</span>
+                        <span class="status ${getTicketStatusBadge(t.status)}">${getTicketStatusText(t.status)}</span>
+                    </div>
+                    <div class="ticket-header">
+                        <span style="font-size:13px;color:var(--text-secondary);">${t.category}</span>
+                        <span class="ticket-date">${formatDate(t.createdAt)}</span>
+                    </div>
+                    <div class="ticket-preview">${t.description.substring(0, 100)}${t.description.length > 100 ? '...' : ''}</div>
+                </div>
+            `).join('');
+
+            // Update recent tickets on home
+            renderRecentTickets();
+        }
+
+        function renderRecentTickets() {
+            const container = document.getElementById('recentTickets');
+            const recent = tickets.slice(0, 3);
+
+            if (!recent.length) {
+                container.innerHTML =
+                    '<div class="text-muted text-center" style="padding:20px 0;font-size:14px;">لا توجد تذاكر حديثة</div>';
+                return;
+            }
+
+            container.innerHTML = recent.map(t => `
+                <div class="list-item clickable" onclick="viewTicket('${t.id}')" style="cursor:pointer;">
+                    <div class="left">
+                        <div class="icon-circle"><i class="fas fa-ticket"></i></div>
+                        <div class="info">
+                            <div class="title">${t.title}</div>
+                            <div class="sub">${formatDate(t.createdAt)} • ${t.category}</div>
+                        </div>
+                    </div>
+                    <div class="right">
+                        <span class="status ${getTicketStatusBadge(t.status)}">${getTicketStatusText(t.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewTicket(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) {
+                showToast('❌ التذكرة غير موجودة');
+                return;
+            }
+
+            currentTicketId = ticketId;
+            document.getElementById('ticketDetailTitle').textContent = ticket.title;
+
+            const container = document.getElementById('ticketDetailContent');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="flex-between">
+                        <div>
+                            <span style="font-weight:700;font-size:18px;">${ticket.title}</span>
+                            <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">
+                                ${ticket.category} • ${formatDate(ticket.createdAt)}
+                            </div>
+                        </div>
+                        <span class="status ${getTicketStatusBadge(ticket.status)}">${getTicketStatusText(ticket.status)}</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div style="background:var(--bg-input);padding:14px;border-radius:var(--radius-sm);margin-bottom:12px;">
+                        <div style="font-weight:700;font-size:14px;margin-bottom:6px;">تفاصيل المشكلة</div>
+                        <div style="font-size:15px;color:var(--text-secondary);white-space:pre-wrap;">${ticket.description}</div>
+                    </div>
+                    ${ticket.attachment ? `<div style="margin-bottom:12px;background:var(--accent-glow);padding:10px;border-radius:var(--radius-sm);border:1px dashed var(--accent);">
+                        <i class="fas fa-paperclip"></i> المرفق: ${ticket.attachment}
+                    </div>` : ''}
+                    <div class="divider"></div>
+                    <div style="font-weight:700;font-size:14px;margin-bottom:8px;">محادثة الدعم</div>
+                    ${ticket.messages.map(msg => `
+                        <div style="padding:10px 14px;margin-bottom:8px;border-radius:var(--radius-sm);background:${msg.from === 'user' ? 'var(--bg-input)' : 'var(--accent-glow)'};border:${msg.from === 'admin' ? '1px solid var(--accent-light)' : '1px solid var(--border)'};">
+                            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:4px;">
+                                <span>${msg.from === 'user' ? 'أنت' : 'الدعم'}</span>
+                                <span>${formatDate(msg.timestamp)}</span>
+                            </div>
+                            <div style="font-size:15px;">${msg.text}</div>
+                        </div>
+                    `).join('')}
+                    ${ticket.status !== 'closed' ? `
+                        <div class="input-group mt-8">
+                            <textarea id="ticketReply" placeholder="أضف رداً..." style="min-height:80px;"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="replyToTicket('${ticket.id}')">
+                            <i class="fas fa-reply"></i> إرسال الرد
+                        </button>
+                    ` : `
+                        <div style="text-align:center;padding:12px;background:var(--success-light);border-radius:var(--radius-sm);border:1px solid var(--success);">
+                            <i class="fas fa-check-circle" style="color:var(--success);"></i>
+                            <span style="font-weight:700;">هذه التذكرة مغلقة</span>
+                        </div>
+                    `}
+                </div>
+            `;
+
+            navigateTo('ticket-detail');
+        }
+
+        function replyToTicket(ticketId) {
+            const ticket = tickets.find(t => t.id === ticketId);
+            if (!ticket) return;
+
+            const reply = document.getElementById('ticketReply').value.trim();
+            if (!reply) {
+                showToast('❌ يرجى كتابة ردك');
+                return;
+            }
+
+            ticket.messages.push({
+                from: 'user',
+                text: reply,
+                timestamp: new Date().toISOString()
+            });
+
+            if (ticket.status === 'closed') {
+                ticket.status = 'open';
+            }
+
+            document.getElementById('ticketReply').value = '';
+            renderTickets();
+            updateStats();
+            viewTicket(ticketId);
+            showToast('✅ تم إرسال ردك');
+        }
+
+        function filterTickets(filter) {
+            currentTicketFilter = filter;
+            document.querySelectorAll('#page-tickets .btn[data-filter]').forEach(b => {
+                b.className = `btn btn-sm ${b.dataset.filter === filter ? 'btn-primary' : 'btn-ghost'}`;
+            });
+            renderTickets();
+        }
+
+        function updateStats() {
+            const open = tickets.filter(t => t.status === 'open').length;
+            const pending = tickets.filter(t => t.status === 'pending').length;
+            const closed = tickets.filter(t => t.status === 'closed').length;
+
+            document.getElementById('ticketOpen').textContent = open;
+            document.getElementById('ticketPending').textContent = pending;
+            document.getElementById('ticketClosed').textContent = closed;
+        }
+
+        // ============================================================
+        // 8. CONTACT
+        // ============================================================
+        function openContact() {
+            navigateTo('contact');
+        }
+
+        // ============================================================
+        // 9. HELPERS
+        // ============================================================
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'الآن';
+            if (diff < 3600000) return Math.floor(diff / 60000) + ' دقيقة';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + ' ساعة';
+
+            return date.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // ============================================================
+        // 10. SAMPLE DATA (for demo)
+        // ============================================================
+        function loadSampleTickets() {
+            // Add some sample tickets if none exist
+            if (tickets.length === 0) {
+                const tgUser = getTelegramUser();
+                const userName = tgUser?.first_name || 'زائر';
+
+                tickets = [{
+                    id: 'TKT-DEMO-001',
+                    title: 'مشكلة في سحب الأرباح',
+                    category: 'withdraw',
+                    description: 'حاولت سحب أرباحي اليوم ولكن ظهرت لي رسالة خطأ. الرجاء المساعدة في حل هذه المشكلة.',
+                    status: 'pending',
+                    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    userId: tgUser?.id || 'guest',
+                    userName: userName,
+                    messages: [{
+                        from: 'user',
+                        text: 'حاولت سحب أرباحي اليوم ولكن ظهرت لي رسالة خطأ. الرجاء المساعدة في حل هذه المشكلة.',
+                        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+                    }, {
+                        from: 'admin',
+                        text: 'مرحباً، نعتذر عن الإزعاج. يرجى إرسال لقطة شاشة للخطأ وسنقوم بحل المشكلة في أقرب وقت.',
+                        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+                    }],
+                    attachment: null
+                }, {
+                    id: 'TKT-DEMO-002',
+                    title: 'استفسار عن خطة الاستثمار',
+                    category: 'investment',
+                    description: 'أود معرفة المزيد عن خطة النخبة وما هي العوائد المتوقعة منها.',
+                    status: 'open',
+                    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    userId: tgUser?.id || 'guest',
+                    userName: userName,
+                    messages: [{
+                        from: 'user',
+                        text: 'أود معرفة المزيد عن خطة النخبة وما هي العوائد المتوقعة منها.',
+                        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+                    }],
+                    attachment: null
+                }];
+
+                renderTickets();
+                updateStats();
+            }
+        }
+
+        // ============================================================
+        // 11. INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load sample data
+            loadSampleTickets();
+
+            // Telegram BackButton
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.BackButton.onClick(() => {
+                    const active = document.querySelector('.page.active');
+                    if (active && active.id !== 'page-home') {
+                        navigateTo('home');
+                    } else {
+                        tg.close();
+                    }
+                });
+            }
+
+            console.log('🆘 Crynova Support System loaded!');
+            console.log(`📊 ${tickets.length} tickets loaded`);
+        });
+
+        // ============================================================
+        // 12. THEME TOGGLE (Dark/Light)
+        // ============================================================
+        // The theme is inherited from the main app, but we add a simple toggle
+        let isDark = false;
+
+        function toggleSupportTheme() {
+            isDark = !isDark;
+            const root = document.documentElement;
+            if (isDark) {
+                root.style.setProperty('--bg-primary', '#0a0a1a');
+                root.style.setProperty('--bg-secondary', '#12122a');
+                root.style.setProperty('--bg-card', '#1a1a3e');
+                root.style.setProperty('--bg-input', '#1a1a3e');
+                root.style.setProperty('--bg-nav', '#1a1a3e');
+                root.style.setProperty('--text-primary', '#e8e8f0');
+                root.style.setProperty('--text-secondary', '#8888aa');
+                root.style.setProperty('--text-muted', '#555577');
+                root.style.setProperty('--border', '#2a2a5a');
+                root.style.setProperty('--border-light', '#2a2a5a');
+            } else {
+                root.style.setProperty('--bg-primary', '#f0f4f8');
+                root.style.setProperty('--bg-secondary', '#ffffff');
+                root.style.setProperty('--bg-card', '#ffffff');
+                root.style.setProperty('--bg-input', '#f0f4f8');
+                root.style.setProperty('--bg-nav', '#ffffff');
+                root.style.setProperty('--text-primary', '#1a1a2e');
+                root.style.setProperty('--text-secondary', '#4a4a6a');
+                root.style.setProperty('--text-muted', '#8a8aaa');
+                root.style.setProperty('--border', '#e2e8f0');
+                root.style.setProperty('--border-light', '#f0f4f8');
+            }
+        }
+    </script>
 </body>
 </html>
