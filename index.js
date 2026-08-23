@@ -5,7 +5,7 @@ const express = require('express');
 // 1. متغيرات البيئة
 // ============================================================
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const WEBHOOK_URL = process.env.WEBHOOK_URL; // مثال: https://crynova-support.onrender.com/webhook
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const PORT = process.env.PORT || 3000;
 
 if (!BOT_TOKEN) {
@@ -96,8 +96,8 @@ if (WEBHOOK_URL) {
     res.send('✅ بوت Crynova Support يعمل عبر Webhook');
   });
 
-  // تشغيل الخادم
-  app.listen(PORT, async () => {
+  // تشغيل الخادم مع ربطه بـ 0.0.0.0 والمنفذ المحدد
+  app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 خادم Express يعمل على المنفذ ${PORT}`);
 
     try {
