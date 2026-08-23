@@ -1,16 +1,31 @@
 const { Telegraf, Markup } = require('telegraf');
+const express = require('express');
 
-// الحصول على توكن البوت من متغيرات البيئة
+// ============================================================
+// 1. متغيرات البيئة
+// ============================================================
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const WEBHOOK_URL = process.env.WEBHOOK_URL; // مثال: https://crynova-support.onrender.com/webhook
+const PORT = process.env.PORT || 3000;
+
 if (!BOT_TOKEN) {
   console.error('❌ لم يتم تعيين BOT_TOKEN في متغيرات البيئة');
   process.exit(1);
 }
 
-// إنشاء البوت
+if (!WEBHOOK_URL) {
+  console.error('❌ لم يتم تعيين WEBHOOK_URL في متغيرات البيئة');
+  console.log('⚠️  سيتم استخدام long polling كبديل');
+}
+
+// ============================================================
+// 2. إنشاء البوت
+// ============================================================
 const bot = new Telegraf(BOT_TOKEN);
 
-// رسالة الترحيب المطلوبة (نفس النص تماماً)
+// ============================================================
+// 3. رسالة الترحيب
+// ============================================================
 const WELCOME_MESSAGE = `💜 مرحبًا بك في دعم Crynova
 
 👋 كيف يمكننا مساعدتك اليوم؟
@@ -23,21 +38,21 @@ const WELCOME_MESSAGE = `💜 مرحبًا بك في دعم Crynova
 
 Crynova Support 💜`;
 
+// ============================================================
+// 4. الأوامر
+// ============================================================
+
 // أمر /start
 bot.start(async (ctx) => {
   try {
-    // إنشاء أزرار مضمنة
     const keyboard = Markup.inlineKeyboard([
-      // الصف الأول: زر خدمة العملاء (يأخذ عرضاً كاملاً أو جزءاً كبيراً)
       [Markup.button.url('🛎️ خدمة العملاء', 'https://t.me/CrynovaSupport_bot/support')],
-      // الصف الثاني: زر القناة الرسمية وزر الدردشة جنباً إلى جنب
       [
         Markup.button.url('📢 القناة الرسمية', 'https://t.me/Crynova_dz'),
         Markup.button.url('💬 فتح الدردشة', 'https://t.me/CrynovaChat')
       ]
     ]);
 
-    // إرسال الرسالة مع الأزرار
     await ctx.reply(WELCOME_MESSAGE, keyboard);
     console.log(`✅ تم إرسال رسالة الترحيب للمستخدم: ${ctx.from.id}`);
   } catch (error) {
@@ -45,18 +60,16 @@ bot.start(async (ctx) => {
   }
 });
 
-// أمر /help (اختياري)
+// أمر /help
 bot.help((ctx) => {
   ctx.reply('🆘 للتواصل مع الدعم، استخدم الأزرار أعلاه أو أرسل رسالتك وسنرد عليك في أقرب وقت.');
 });
 
 // الرد على أي رسالة نصية أخرى
 bot.on('text', async (ctx) => {
-  // تجاهل الأوامر التي تبدأ بـ / حتى لا نتداخل مع الأوامر الأخرى
   if (ctx.message.text.startsWith('/')) return;
 
   try {
-    // يمكن إرسال رد تلقائي للمستخدم بأنه سيتم الرد عليه
     await ctx.reply('✅ تم استلام رسالتك، سيتم الرد عليك قريباً من قبل فريق الدعم.');
     console.log(`📩 رسالة من ${ctx.from.id}: ${ctx.message.text}`);
   } catch (error) {
@@ -64,16 +77,52 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// تشغيل البوت (باستخدام long polling)
-bot.launch()
-  .then(() => {
-    console.log('🚀 بوت Crynova Support يعمل الآن...');
-  })
-  .catch((err) => {
-    console.error('❌ فشل تشغيل البوت:', err);
-    process.exit(1);
+// ============================================================
+// 5. إعداد Webhook أو Long Polling
+// ============================================================
+
+if (WEBHOOK_URL) {
+  // ---------- استخدام Webhook ----------
+  const app = express();
+  app.use(express.json());
+
+  // نقطة نهاية الويب هوك
+  app.post('/webhook', (req, res) => {
+    bot.handleUpdate(req.body, res);
   });
 
-// إيقاف التشغيل بشكل نظيف عند إنهاء العملية
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+  // نقطة نهاية للتحقق من صحة الخادم
+  app.get('/', (req, res) => {
+    res.send('✅ بوت Crynova Support يعمل عبر Webhook');
+  });
+
+  // تشغيل الخادم
+  app.listen(PORT, async () => {
+    console.log(`🚀 خادم Express يعمل على المنفذ ${PORT}`);
+
+    try {
+      // تعيين الويب هوك
+      await bot.telegram.setWebhook(`${WEBHOOK_URL}/webhook`);
+      console.log(`✅ تم تعيين Webhook: ${WEBHOOK_URL}/webhook`);
+    } catch (err) {
+      console.error('❌ فشل تعيين Webhook:', err);
+    }
+  });
+
+} else {
+  // ---------- استخدام Long Polling (بديل) ----------
+  console.log('⚠️  WEBHOOK_URL غير مضبوط، سيتم استخدام Long Polling');
+
+  bot.launch()
+    .then(() => {
+      console.log('🚀 بوت Crynova Support يعمل عبر Long Polling');
+    })
+    .catch((err) => {
+      console.error('❌ فشل تشغيل البوت:', err);
+      process.exit(1);
+    });
+
+  // إيقاف التشغيل بشكل نظيف
+  process.once('SIGINT', () => bot.stop('SIGINT'));
+  process.once('SIGTERM', () => bot.stop('SIGTERM'));
+}
