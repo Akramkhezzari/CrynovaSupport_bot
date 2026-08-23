@@ -100,29 +100,6 @@
             -webkit-text-fill-color: var(--accent);
             font-size: 24px;
         }
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            text-decoration: none;
-        }
-        .back-btn:hover {
-            background: var(--bg-input);
-            border-color: var(--accent);
-        }
-        .back-btn i {
-            font-size: 14px;
-        }
 
         /* CARDS */
         .card {
@@ -216,6 +193,13 @@
         }
         .btn-block {
             width: 100%;
+        }
+        .btn-ghost {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            background: var(--border);
         }
 
         /* INPUTS */
@@ -533,6 +517,45 @@
             transition: opacity 0.3s ease;
         }
 
+        /* Page Titles */
+        .page-title {
+            font-size: 22px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .page-title i {
+            color: var(--accent);
+        }
+
+        /* Ticket Filter - One Line */
+        .ticket-filters {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding: 2px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .ticket-filters::-webkit-scrollbar {
+            display: none;
+        }
+        .ticket-filters .btn {
+            flex: 0 0 auto;
+            padding: 8px 14px;
+            font-size: 13px;
+            white-space: nowrap;
+            width: auto;
+            border-radius: 20px;
+        }
+        .ticket-filters .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 420px) {
             .app-container {
@@ -554,6 +577,10 @@
             .btn {
                 padding: 12px 18px;
                 font-size: 14px;
+            }
+            .ticket-filters .btn {
+                padding: 6px 10px;
+                font-size: 11px;
             }
         }
 
@@ -618,6 +645,9 @@
             background: var(--border);
             margin: 16px 0;
         }
+        .clickable {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -630,9 +660,6 @@
                 <i class="fas fa-headset"></i>
                 دعم Crynova
             </div>
-            <button class="back-btn" onclick="closeApp()">
-                <i class="fas fa-times"></i> إغلاق
-            </button>
         </header>
 
         <!-- ========== PAGE: HOME ========== -->
@@ -641,31 +668,8 @@
             <!-- Welcome Card -->
             <div class="card" style="background:var(--accent-gradient);border:none;color:white;">
                 <div style="text-align:center;padding:8px 0;">
-                    <div style="font-size:48px;margin-bottom:8px;">👋</div>
                     <div style="font-size:22px;font-weight:900;">مرحباً بك في الدعم</div>
                     <div style="font-size:15px;opacity:0.9;">فريق Crynova هنا لمساعدتك على مدار الساعة</div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-bolt"></i>
-                    خيارات سريعة
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <button class="btn btn-primary btn-sm" onclick="navigateTo('tickets')">
-                        <i class="fas fa-ticket"></i> تذاكري
-                    </button>
-                    <button class="btn btn-success btn-sm" onclick="navigateTo('new-ticket')">
-                        <i class="fas fa-plus-circle"></i> تذكرة جديدة
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="navigateTo('faq')">
-                        <i class="fas fa-question-circle"></i> الأسئلة الشائعة
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="openContact()">
-                        <i class="fas fa-phone"></i> اتصل بنا
-                    </button>
                 </div>
             </div>
 
@@ -703,48 +707,13 @@
                     <div class="text-muted text-center" style="padding:20px 0;font-size:14px;">لا توجد تذاكر حديثة</div>
                 </div>
             </div>
-
-            <!-- Quick Contact -->
-            <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-headset"></i>
-                    تواصل معنا
-                </div>
-                <div class="contact-grid">
-                    <a href="https://t.me/CrynovaSupport_bot" class="contact-card" target="_blank">
-                        <span class="icon">🤖</span>
-                        <div class="label">البوت</div>
-                        <div class="sub">@CrynovaSupport_bot</div>
-                    </a>
-                    <a href="https://t.me/CrynovaSupport" class="contact-card" target="_blank">
-                        <span class="icon">💬</span>
-                        <div class="label">الدعم المباشر</div>
-                        <div class="sub">محادثة فورية</div>
-                    </a>
-                    <a href="mailto:support@crynova.com" class="contact-card">
-                        <span class="icon">📧</span>
-                        <div class="label">البريد الإلكتروني</div>
-                        <div class="sub">support@crynova.com</div>
-                    </a>
-                    <a href="#" class="contact-card" onclick="showToast('سيتم الرد عليك خلال 24 ساعة')">
-                        <span class="icon">📝</span>
-                        <div class="label">استمارة</div>
-                        <div class="sub">اترك رسالة</div>
-                    </a>
-                </div>
-            </div>
         </div>
 
         <!-- ========== PAGE: FAQ ========== -->
         <div class="page" id="page-faq">
-            <div class="flex-between" style="margin-bottom:16px;">
-                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-question-circle text-accent"></i>
-                    الأسئلة الشائعة
-                </h2>
-                <button class="back-btn" onclick="navigateTo('home')">
-                    <i class="fas fa-arrow-right"></i> رجوع
-                </button>
+            <div class="page-title">
+                <i class="fas fa-question-circle"></i>
+                الأسئلة الشائعة
             </div>
 
             <div class="card">
@@ -832,22 +801,18 @@
 
         <!-- ========== PAGE: TICKETS ========== -->
         <div class="page" id="page-tickets">
-            <div class="flex-between" style="margin-bottom:16px;">
-                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-ticket text-accent"></i>
-                    تذاكر الدعم
-                </h2>
-                <button class="back-btn" onclick="navigateTo('home')">
-                    <i class="fas fa-arrow-right"></i> رجوع
-                </button>
+            <div class="page-title">
+                <i class="fas fa-ticket"></i>
+                تذاكر الدعم
             </div>
 
-            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <button class="btn btn-sm btn-primary" onclick="filterTickets('all')" data-filter="all" style="width:auto;">الكل</button>
-                <button class="btn btn-sm btn-ghost" onclick="filterTickets('open')" data-filter="open" style="width:auto;">مفتوحة</button>
-                <button class="btn btn-sm btn-ghost" onclick="filterTickets('pending')" data-filter="pending" style="width:auto;">قيد المعالجة</button>
-                <button class="btn btn-sm btn-ghost" onclick="filterTickets('closed')" data-filter="closed" style="width:auto;">مغلقة</button>
-                <button class="btn btn-sm btn-success" onclick="navigateTo('new-ticket')" style="width:auto;margin-right:auto;">
+            <!-- Filter Buttons - One Line -->
+            <div class="ticket-filters">
+                <button class="btn btn-primary" onclick="filterTickets('all')" data-filter="all">الكل</button>
+                <button class="btn btn-ghost" onclick="filterTickets('open')" data-filter="open">مفتوحة</button>
+                <button class="btn btn-ghost" onclick="filterTickets('pending')" data-filter="pending">قيد المعالجة</button>
+                <button class="btn btn-ghost" onclick="filterTickets('closed')" data-filter="closed">مغلقة</button>
+                <button class="btn btn-success" onclick="navigateTo('new-ticket')" style="margin-right:auto;">
                     <i class="fas fa-plus"></i> جديد
                 </button>
             </div>
@@ -863,14 +828,9 @@
 
         <!-- ========== PAGE: NEW TICKET ========== -->
         <div class="page" id="page-new-ticket">
-            <div class="flex-between" style="margin-bottom:16px;">
-                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-plus-circle text-success"></i>
-                    تذكرة جديدة
-                </h2>
-                <button class="back-btn" onclick="navigateTo('home')">
-                    <i class="fas fa-arrow-right"></i> رجوع
-                </button>
+            <div class="page-title">
+                <i class="fas fa-plus-circle text-success"></i>
+                تذكرة جديدة
             </div>
 
             <div class="card">
@@ -920,14 +880,9 @@
 
         <!-- ========== PAGE: TICKET DETAIL ========== -->
         <div class="page" id="page-ticket-detail">
-            <div class="flex-between" style="margin-bottom:16px;">
-                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-ticket text-accent"></i>
-                    <span id="ticketDetailTitle">تفاصيل التذكرة</span>
-                </h2>
-                <button class="back-btn" onclick="navigateTo('tickets')">
-                    <i class="fas fa-arrow-right"></i> رجوع
-                </button>
+            <div class="page-title">
+                <i class="fas fa-ticket"></i>
+                <span id="ticketDetailTitle">تفاصيل التذكرة</span>
             </div>
 
             <div id="ticketDetailContent">
@@ -937,33 +892,15 @@
 
         <!-- ========== PAGE: CONTACT ========== -->
         <div class="page" id="page-contact">
-            <div class="flex-between" style="margin-bottom:16px;">
-                <h2 style="font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-headset text-success"></i>
-                    اتصل بنا
-                </h2>
-                <button class="back-btn" onclick="navigateTo('home')">
-                    <i class="fas fa-arrow-right"></i> رجوع
-                </button>
+            <div class="page-title">
+                <i class="fas fa-headset text-success"></i>
+                اتصل بنا
             </div>
 
             <div class="card" style="background:var(--accent-gradient);border:none;color:white;text-align:center;">
-                <div style="font-size:52px;margin-bottom:8px;">💬</div>
-                <div style="font-size:20px;font-weight:900;">نحن هنا لمساعدتك</div>
-                <div style="font-size:15px;opacity:0.9;">فريق الدعم متاح 24/7 للإجابة على استفساراتك</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title"><i class="fas fa-robot"></i> بوت الدعم</div>
-                <div class="contact-grid" style="grid-template-columns:1fr;">
-                    <a href="https://t.me/CrynovaSupport_bot" class="contact-card" target="_blank" style="display:flex;align-items:center;gap:16px;padding:16px;text-align:right;">
-                        <span class="icon" style="font-size:28px;margin:0;">🤖</span>
-                        <div>
-                            <div class="label" style="font-size:16px;">@CrynovaSupport_bot</div>
-                            <div class="sub">تواصل مع البوت للحصول على مساعدة فورية</div>
-                        </div>
-                        <span style="margin-right:auto;color:var(--accent);"><i class="fas fa-arrow-left"></i></span>
-                    </a>
+                <div style="padding:8px 0;">
+                    <div style="font-size:20px;font-weight:900;">نحن هنا لمساعدتك</div>
+                    <div style="font-size:15px;opacity:0.9;">فريق الدعم متاح 24/7 للإجابة على استفساراتك</div>
                 </div>
             </div>
 
@@ -1048,19 +985,6 @@
             document.querySelectorAll('.nav-item').forEach(b => {
                 b.classList.toggle('active', b.dataset.page === page);
             });
-
-            if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                page === 'home' ? tg.BackButton.hide() : tg.BackButton.show();
-            }
-        }
-
-        function closeApp() {
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.close();
-            } else {
-                window.close();
-            }
         }
 
         // ============================================================
@@ -1329,7 +1253,7 @@
         function filterTickets(filter) {
             currentTicketFilter = filter;
             document.querySelectorAll('#page-tickets .btn[data-filter]').forEach(b => {
-                b.className = `btn btn-sm ${b.dataset.filter === filter ? 'btn-primary' : 'btn-ghost'}`;
+                b.className = `btn ${b.dataset.filter === filter ? 'btn-primary' : 'btn-ghost'}`;
             });
             renderTickets();
         }
@@ -1345,14 +1269,7 @@
         }
 
         // ============================================================
-        // 8. CONTACT
-        // ============================================================
-        function openContact() {
-            navigateTo('contact');
-        }
-
-        // ============================================================
-        // 9. HELPERS
+        // 8. HELPERS
         // ============================================================
         function formatDate(timestamp) {
             const date = new Date(timestamp);
@@ -1373,10 +1290,9 @@
         }
 
         // ============================================================
-        // 10. SAMPLE DATA (for demo)
+        // 9. SAMPLE DATA (for demo)
         // ============================================================
         function loadSampleTickets() {
-            // Add some sample tickets if none exist
             if (tickets.length === 0) {
                 const tgUser = getTelegramUser();
                 const userName = tgUser?.first_name || 'زائر';
@@ -1423,33 +1339,8 @@
         }
 
         // ============================================================
-        // 11. INIT
+        // 10. THEME TOGGLE (Dark/Light)
         // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load sample data
-            loadSampleTickets();
-
-            // Telegram BackButton
-            if (window.Telegram?.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.BackButton.onClick(() => {
-                    const active = document.querySelector('.page.active');
-                    if (active && active.id !== 'page-home') {
-                        navigateTo('home');
-                    } else {
-                        tg.close();
-                    }
-                });
-            }
-
-            console.log('🆘 Crynova Support System loaded!');
-            console.log(`📊 ${tickets.length} tickets loaded`);
-        });
-
-        // ============================================================
-        // 12. THEME TOGGLE (Dark/Light)
-        // ============================================================
-        // The theme is inherited from the main app, but we add a simple toggle
         let isDark = false;
 
         function toggleSupportTheme() {
@@ -1479,6 +1370,15 @@
                 root.style.setProperty('--border-light', '#f0f4f8');
             }
         }
+
+        // ============================================================
+        // 11. INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSampleTickets();
+            console.log('🆘 Crynova Support System loaded!');
+            console.log(`📊 ${tickets.length} tickets loaded`);
+        });
     </script>
 </body>
 </html>
