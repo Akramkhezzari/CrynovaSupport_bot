@@ -1,4 +1,4 @@
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 
 // الحصول على توكن البوت من متغيرات البيئة
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -10,7 +10,7 @@ if (!BOT_TOKEN) {
 // إنشاء البوت
 const bot = new Telegraf(BOT_TOKEN);
 
-// رسالة الترحيب المطلوبة
+// رسالة الترحيب المطلوبة (نفس النص تماماً)
 const WELCOME_MESSAGE = `💜 مرحبًا بك في دعم Crynova
 
 👋 كيف يمكننا مساعدتك اليوم؟
@@ -26,7 +26,19 @@ Crynova Support 💜`;
 // أمر /start
 bot.start(async (ctx) => {
   try {
-    await ctx.reply(WELCOME_MESSAGE);
+    // إنشاء أزرار مضمنة
+    const keyboard = Markup.inlineKeyboard([
+      // الصف الأول: زر خدمة العملاء (يأخذ عرضاً كاملاً أو جزءاً كبيراً)
+      [Markup.button.url('🛎️ خدمة العملاء', 'https://t.me/CrynovaSupport_bot/support')],
+      // الصف الثاني: زر القناة الرسمية وزر الدردشة جنباً إلى جنب
+      [
+        Markup.button.url('📢 القناة الرسمية', 'https://t.me/Crynova_dz'),
+        Markup.button.url('💬 فتح الدردشة', 'https://t.me/CrynovaChat')
+      ]
+    ]);
+
+    // إرسال الرسالة مع الأزرار
+    await ctx.reply(WELCOME_MESSAGE, keyboard);
     console.log(`✅ تم إرسال رسالة الترحيب للمستخدم: ${ctx.from.id}`);
   } catch (error) {
     console.error('❌ فشل إرسال رسالة الترحيب:', error);
@@ -35,7 +47,7 @@ bot.start(async (ctx) => {
 
 // أمر /help (اختياري)
 bot.help((ctx) => {
-  ctx.reply('🆘 للتواصل مع الدعم، أرسل رسالتك وسنرد عليك في أقرب وقت.');
+  ctx.reply('🆘 للتواصل مع الدعم، استخدم الأزرار أعلاه أو أرسل رسالتك وسنرد عليك في أقرب وقت.');
 });
 
 // الرد على أي رسالة نصية أخرى
