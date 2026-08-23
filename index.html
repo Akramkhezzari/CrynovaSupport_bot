@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <title>Crynova Support Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <div>
+          <strong>Crynova</strong>
+          <span>Support Center</span>
+        </div>
+      </div>
+      <button class="icon-btn" id="notificationsBtn" aria-label="الإشعارات">🔔<span class="notification-dot"></span></button>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+          <span class="eyebrow">مركز الدعم الرسمي</span>
+          <h1>مرحباً بك، <span id="userName">عضو Crynova</span> 👋</h1>
+          <p>فريق الدعم هنا لمساعدتك في كل ما يتعلق بحسابك وعملياتك على المنصة.</p>
+          <div class="status-pill"><span></span> حسابك مؤهل للدعم</div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <span>💰</span>
+          <div><small>إجمالي الإيداعات</small><strong id="totalDeposits">25,000 دج</strong></div>
+        </article>
+        <article class="stat-card">
+          <span>📈</span>
+          <div><small>الاستثمارات</small><strong id="investments">2</strong></div>
+        </article>
+        <article class="stat-card">
+          <span>🎫</span>
+          <div><small>تذاكر مفتوحة</small><strong id="openTickets">1</strong></div>
+        </article>
+      </section>
+
+      <section class="section-head">
+        <div>
+          <span class="eyebrow">الخدمة</span>
+          <h2>كيف يمكننا مساعدتك؟</h2>
+        </div>
+      </section>
+
+      <section class="support-grid">
+        <button class="support-card" data-category="deposit">
+          <div class="support-icon">💳</div><div><strong>مشكلة في الإيداع</strong><small>تأخر أو عدم ظهور الإيداع</small></div><b>‹</b>
+        </button>
+        <button class="support-card" data-category="withdrawal">
+          <div class="support-icon">💸</div><div><strong>مشكلة في السحب</strong><small>السحب قيد الانتظار أو مرفوض</small></div><b>‹</b>
+        </button>
+        <button class="support-card" data-category="investment">
+          <div class="support-icon">📊</div><div><strong>الاستثمار</strong><small>استفسار حول الاستثمار والأرباح</small></div><b>‹</b>
+        </button>
+        <button class="support-card" data-category="bonus">
+          <div class="support-icon">🎁</div><div><strong>المكافآت</strong><small>مكافأة الإيداع أو العروض</small></div><b>‹</b>
+        </button>
+        <button class="support-card" data-category="referral">
+          <div class="support-icon">👥</div><div><strong>الإحالات</strong><small>الرابط والعمولات والإحالات</small></div><b>‹</b>
+        </button>
+        <button class="support-card" data-category="account">
+          <div class="support-icon">🔐</div><div><strong>الحساب</strong><small>الدخول أو بيانات الحساب</small></div><b>‹</b>
+        </button>
+      </section>
+
+      <section class="tickets-section">
+        <div class="section-head">
+          <div><span class="eyebrow">Support Tickets</span><h2>تذاكر الدعم</h2></div>
+          <button class="primary-btn compact" id="newTicketBtn">+ تذكرة جديدة</button>
+        </div>
+
+        <div class="ticket-list" id="ticketList"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active"><span>⌂</span><small>الرئيسية</small></button>
+      <button class="nav-item" id="ticketsNav"><span>🎫</span><small>تذاكري</small></button>
+      <button class="nav-item" id="profileNav"><span>👤</span><small>حسابي</small></button>
+    </nav>
+  </div>
+
+  <!-- Ticket modal -->
+  <div class="modal" id="ticketModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="ticketModal"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div><span class="eyebrow">NEW TICKET</span><h2>فتح تذكرة دعم</h2></div>
+        <button class="close-btn" data-close="ticketModal">×</button>
+      </div>
+
+      <form id="ticketForm">
+        <label>نوع المشكلة
+          <select id="category" required>
+            <option value="">اختر القسم</option>
+            <option value="deposit">💳 مشكلة في الإيداع</option>
+            <option value="withdrawal">💸 مشكلة في السحب</option>
+            <option value="investment">📊 الاستثمار</option>
+            <option value="bonus">🎁 المكافآت</option>
+            <option value="referral">👥 الإحالات</option>
+            <option value="account">🔐 الحساب</option>
+            <option value="other">💬 مشكلة أخرى</option>
+          </select>
+        </label>
+
+        <label>المبلغ (اختياري)
+          <input id="amount" type="number" min="0" placeholder="مثال: 5000">
+        </label>
+
+        <label>اشرح مشكلتك
+          <textarea id="description" rows="5" required placeholder="اكتب تفاصيل المشكلة بوضوح..."></textarea>
+        </label>
+
+        <label class="upload-box">
+          <input id="attachment" type="file" accept="image/*">
+          <span>📎</span>
+          <div><strong>إرفاق إثبات</strong><small>صورة واحدة، حتى 5MB</small></div>
+        </label>
+
+        <button class="primary-btn full" type="submit">إرسال التذكرة</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ticket details modal -->
+  <div class="modal" id="detailsModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="detailsModal"></div>
+    <div class="modal-card details-card">
+      <div class="modal-head">
+        <div><span class="eyebrow" id="detailsId">#CRY-0000</span><h2 id="detailsTitle">تذكرة الدعم</h2></div>
+        <button class="close-btn" data-close="detailsModal">×</button>
+      </div>
+      <div class="conversation" id="conversation"></div>
+      <form class="reply-form" id="replyForm">
+        <input id="replyInput" placeholder="اكتب ردك..." autocomplete="off" required>
+        <button type="submit">إرسال</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="script.js"></script>
+</body>
+</html>
